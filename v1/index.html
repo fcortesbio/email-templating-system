@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <base target="_top">
+    <style>
+      body { font-family: sans-serif; padding: 1em; }
+      .collapsible { cursor: pointer; padding: 5px; background: #f0f0f0; border: none; outline: none; }
+      .content { display: none; padding-left: 20px; }
+      .bold { font-weight: bold; }
+      .task-list input { margin-right: 5px; }
+      .copy-btn { margin: 5px; }
+    </style>
+  </head>
+  <body>
+    <div id="app"></div>
+
+    <script>
+      const app = document.getElementById("app");
+      const userNameKey = "agentName";
+
+      function renderLogin() {
+        app.innerHTML = `<p>Welcome! Please enter your Employee ID or Name:</p>
+          <input type="text" id="loginInput" />
+          <button onclick="submitLogin()">Submit</button>`;
+      }
+
+      function submitLogin() {
+        const input = document.getElementById("loginInput").value;
+        google.script.run.withSuccessHandler(name => {
+          sessionStorage.setItem(userNameKey, name);
+          renderApp();
+        }).getUserFirstName(input);
+      }
+
+      function renderApp() {
+        const name = sessionStorage.getItem(userNameKey);
+        if (!name) return renderLogin();
+
+        google.script.run.withSuccessHandler(topics => {
+          const container = document.createElement("div");
+          container.innerHTML = `<h2>Welcome, ${name}</h2>`;
+
+          function createTree(node, parent) {
+            Object.entries(node).forEach(([key, value]) => {
+              const btn = document.createElement("button");
+              btn.textContent = key;
+              btn.className = "collapsible";
+
+              const div = document.createElement("div");
+              div.className = "content";
+
+              btn.onclick = () => {
+                div.style.display = div.style.display === "block" ? "none" : "block";
+              };
+
+              if (value.resolution) {
+                const res = value.resolution;
+                const resDiv = document.createElement("div");
+
+                // Tasks
+                const tasksHTML = res.tasks.map(task => `<label class='task-list'><input type='checkbox'/>${task}</label><br/>`).join("");
+                resDiv.innerHTML += `<h4>Tasks:</h4>${tasksHTML}`;
+
+                // Backend note
+                resDiv.innerHTML += `<h4>Back-end Note:</h4><div>${res.backend_note}</div><button class='copy-btn' onclick='copyText("${res.backend_note}")'>Copy</button>`;
+
+                // Subject
+                resDiv.innerHTML += `<h4>Email Subject:</h4><div>${res.email_subject}</div><button class='copy-btn' onclick='copyText("${res.email_subject}")'>Copy</button>`;
+
+                // Email Body with placeholders replaced
+                let emailBody = res.email_body.replaceAll("{{agent_name}}", name).replace(/xX(.*?)Xx/g, "<span class='bold'>xX$1Xx</span>");
+                resDiv.innerHTML += `<h4>Email Body:</h4><div contenteditable='true'>${emailBody}</div><button class='copy-btn' onclick='copyText(this.previousElementSibling.innerText)'>Copy</button>`;
+
+                div.appendChild(resDiv);
+              } else {
+                createTree(value, div);
+              }
+
+              parent.appendChild(btn);
+              parent.appendChild(div);
+            });
+          }
+
+          createTree(topics, container);
+          app.innerHTML = "";
+          app.appendChild(container);
+        }).getTopics();
+      }
+
+      function copyText(text) {
+        navigator.clipboard.writeText(text).then(() => alert("Copied!"));
+      }
+
+      const existing = sessionStorage.getItem(userNameKey);
+      if (existing) renderApp(); else renderLogin();
+    </script>
+  </body>
+</html>
