@@ -9,6 +9,11 @@
       .bold { font-weight: bold; }
       .task-list input { margin-right: 5px; }
       .copy-btn { margin: 5px; }
+      .copied-msg { color: green; font-size: 0.9em; display: inline-block; margin-left: 10px; animation: fadeOut 2s forwards; }
+      @keyframes fadeOut {
+        0% { opacity: 1; }
+        100% { opacity: 0; display: none; }
+      }
     </style>
   </head>
   <body>
@@ -62,14 +67,14 @@
                 resDiv.innerHTML += `<h4>Tasks:</h4>${tasksHTML}`;
 
                 // Backend note
-                resDiv.innerHTML += `<h4>Back-end Note:</h4><div>${res.backend_note}</div><button class='copy-btn' onclick='copyText("${res.backend_note}")'>Copy</button>`;
+                resDiv.innerHTML += `<h4>Back-end Note:</h4><div>${res.backend_note}</div><button class='copy-btn' onclick='copyText(this.previousElementSibling, "${res.backend_note}")'>Copy</button>`;
 
                 // Subject
-                resDiv.innerHTML += `<h4>Email Subject:</h4><div>${res.email_subject}</div><button class='copy-btn' onclick='copyText("${res.email_subject}")'>Copy</button>`;
+                resDiv.innerHTML += `<h4>Email Subject:</h4><div>${res.email_subject}</div><button class='copy-btn' onclick='copyText(this.previousElementSibling, "${res.email_subject}")'>Copy</button>`;
 
                 // Email Body with placeholders replaced
                 let emailBody = res.email_body.replaceAll("{{agent_name}}", name).replace(/xX(.*?)Xx/g, "<span class='bold'>xX$1Xx</span>");
-                resDiv.innerHTML += `<h4>Email Body:</h4><div contenteditable='true'>${emailBody}</div><button class='copy-btn' onclick='copyText(this.previousElementSibling.innerText)'>Copy</button>`;
+                resDiv.innerHTML += `<h4>Email Body:</h4><div contenteditable='true'>${emailBody}</div><button class='copy-btn' onclick='copyText(this.previousElementSibling, this.previousElementSibling.innerText)'>Copy</button>`;
 
                 div.appendChild(resDiv);
               } else {
@@ -87,8 +92,14 @@
         }).getTopics();
       }
 
-      function copyText(text) {
-        navigator.clipboard.writeText(text).then(() => alert("Copied!"));
+      function copyText(referenceElement, text) {
+        navigator.clipboard.writeText(text).then(() => {
+          const msg = document.createElement("span");
+          msg.className = "copied-msg";
+          msg.textContent = "Copied! ✅";
+          referenceElement.insertAdjacentElement("afterend", msg);
+          setTimeout(() => msg.remove(), 2000);
+        });
       }
 
       const existing = sessionStorage.getItem(userNameKey);

@@ -1,5 +1,7 @@
 function doGet(e) {
-  return HtmlService.createHtmlOutputFromFile("index").setTitle("Email Template App");
+  return HtmlService.createHtmlOutputFromFile("index").setTitle(
+    "Email Template App"
+  );
 }
 
 function getUserFirstName(query) {
