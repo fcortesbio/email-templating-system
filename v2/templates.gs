@@ -1,9 +1,10 @@
 /**
  * Email Template Data Structure
  * Hierarchical object containing all email templates and categories
+ * --THIS IS NO LONGER USED, but replaced with dynamic data retrival from source Spreadsheet in utils.gs--
  */
 
-const topics = {
+const topics_deprecated = {
   "Account Issues": {
     "Login Problems": {
       "Forgot Password": {

@@ -1,38 +1,59 @@
-/**
- * Utility functions for the Email Templating app
- */
+// === utils.gs ===
 
 /**
- * Processes a template string by replacing placeholders
- * @param {string} template - The template string with placeholders
- * @param {Object} replacements - Object with placeholder keys and replacement values
- * @return {string} The processed template with replacements
+ * Reads the 'email_templates' spreadsheet and converts it into the nested topics object
+ * Expected columns:
+ * [Level 1 Topic, Level 2 Subtopic, Level 3 Case, Tasks, Backend Note, Email Subject, Email Body]
+ * Tasks should be separated with semicolons (;) in the spreadsheet
+ * @returns {Object} The structured topics object
  */
-function processTemplate(template, replacements) {
-  if (!template) return '';
+function loadTemplatesFromSheet() {
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('email_templates');
+  if (!sheet) throw new Error('Sheet "email_templates" not found');
 
-  let processed = template;
+  const rows = sheet.getDataRange().getValues();
+  const topics = {};
 
-  // Replace each placeholder with its value
-  Object.keys(replacements).forEach(key => {
-    const placeholder = `{{${key}}}`;
-    processed = processed.replace(new RegExp(placeholder, 'g'), replacements[key] || '');
-  });
+  for (let i = 1; i < rows.length; i++) { // skip header
+    const [level1, level2, level3, tasksRaw, backendNote, subject, body] = rows[i];
 
-  return processed;
+    if (!level1) continue; // skip invalid rows
+
+    const taskList = tasksRaw ? tasksRaw.split(';').map(t => t.trim()).filter(t => t.length > 0) : [];
+    const resolution = {
+      tasks: taskList,
+      backend_note: backendNote || '',
+      email_subject: subject || '',
+      email_body: body || ''
+    };
+
+    if (!topics[level1]) topics[level1] = {};
+    const level1Node = topics[level1];
+
+    if (!level2) {
+      // Level 1 is terminal
+      level1Node.resolution = resolution;
+    } else {
+      if (!level1Node[level2]) level1Node[level2] = {};
+      const level2Node = level1Node[level2];
+
+      if (!level3) {
+        // Level 2 is terminal
+        level2Node.resolution = resolution;
+      } else {
+        // Level 3 is terminal
+        level2Node[level3] = { resolution };
+      }
+    }
+  }
+
+  return topics;
 }
 
+
 /**
- * Highlights manual placeholders in a template
- * @param {string} template - The template string with manual placeholders
- * @return {string} HTML string with highlighted placeholders
+ * Replaces the static 'topics' object with dynamic data loaded from the spreadsheet
  */
-function highlightManualPlaceholders(template) {
-  if (!template) return '';
-
-  // Regex to find manual placeholders (format: xXSomethingXx)
-  const manualPlaceholderRegex = /xX([^xX]+)Xx/g;
-
-  // Replace placeholders with bold highlighted versions
-  return template.replace(manualPlaceholderRegex, '<strong style="background-color: #ffff99; color: #333;">xX$1Xx</strong>');
+function getTopics() {
+  return loadTemplatesFromSheet();
 }
