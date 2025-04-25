@@ -1,113 +1,126 @@
-# Google Apps ScriptEmail Templating Web App
+# 📬 Email Templating Web App  
+*A lightweight, dynamic email assistant for support teams – built with Google Apps Script*
 
 ---
 
-## 📌 Project Overview
+## ✨ Overview
 
-- **Type:** Google Apps Script Web App  
-- **Purpose:** Help support agents find and copy email templates based on categorized topics.  
-- **Access:** Internal use only. No external APIs or web access. Only Google Workspace services allowed.  
+This application provides a fast, intuitive interface for navigating and copying support email templates. It replaces the previous system built on large, complex spreadsheets and brings clarity and efficiency to everyday workflows for the **Customer Solutions Tech team** at my organization.
 
----
+Built entirely with **Google Apps Script**, this tool is fully integrated into our internal Google Workspace environment, with **no external dependencies** and **no sensitive data handling**. Templates are dynamically loaded from a shared spreadsheet, meaning content updates can be made without needing to redeploy the app.
 
-## 🧠 Data Structure
-
-### 1. `users` Spreadsheet (bound to the Apps Script project)
-
-- **Sheet name:** `users`  
-- **Structure:** No header row  
-- **Columns:**  
-  1. Employee ID (numeric)  
-  2. Full name (format: `Lastname, Firstname`)  
-  3. Role (string; unused for now)  
-- **Example row:**  
-  `1000 | Cortes, Fabian | Support Agent`  
-
-### 2. `topics` Object (in `templates.gs`)
-
-- Stored as a hierarchical JavaScript object with **nested levels**.  
-- A topic or subtopic that contains a `resolution` object is considered a terminal (leaf).  
-- There is **no fixed depth**.  
-- **Each `resolution` contains:**
-  - `tasks`: array of strings  
-  - `backend_note`: string  
-  - `email_subject`: string  
-  - `email_body`: string (may contain placeholders)  
+🔒 **Internal Only**  
+✅ **No external API calls**  
+🚫 **No user/client data is stored**  
+✍️ **Fully editable by non-technical staff**
 
 ---
 
-## 💻 App Flow
+## 🚀 Live App
 
-### 1. `index.html`
-
-- The web app consists of a single HTML page rendered by `doGet(e)` in `Code.gs`.  
-- All content is **dynamically generated** based on session name.
-
-### 2. Initial Screen (Login)
-
-- Single text input is shown.  
-- Accepts either:  
-  - **EID** (numbers): Matches against the spreadsheet, retrieves **first name** only.  
-  - **Name** (letters/spaces): First word only is kept.  
-- Parsed name is stored in **browser session storage**.  
-- If session has a valid name, show main app interface.  
+👉 [Click here to open the deployed app](https://script.google.com/macros/s/AKfycbzSvgpHD9JZAbaMpZs7SJHCLwS0q4CWyA4nkWeIIlGJi_-W4y_JmiJrc23Y67v6-U32FA/exec)
 
 ---
 
-## 📁 Template Viewer UI
+## 📌 Project Highlights
 
-### 1. Collapsible Menu
+- **Type**: Google Apps Script Web App  
+- **Goal**: Simplify and accelerate access to email templates for support agents  
+- **UI**: Single-page app (`index.html`) with collapsible navigation and copy-ready content  
+- **Data Source**: Templates loaded dynamically from Google Sheet (`email_templates`)  
+- **Access**: Internal only, deployed within Google Workspace
 
-- Generated recursively from the `topics` object.  
-- Menu depth matches object nesting.  
-- Clicking a terminal node (with `resolution`) reveals its details.
+---
 
-### 2. Resolution Section
+## 🧠 Data Sources
 
-Displays the following when a resolution is selected:
+### 1. `users` Sheet
 
-- **Tasks**: Rendered as checkboxes (non-functional).  
-- **Back-end note**: In a `<div>` with a copy button.  
-- **Email subject**: In a `<div>` with a copy button.  
-- **Email body**: In a **contenteditable div** with copy button.  
+- **Sheet name**: `users`  
+- **Columns (no header):**
+  1. Employee ID (e.g. `1001`)
+  2. Full Name (e.g. `Doe, Jane`)
+  3. Role (e.g. `Support Agent`)
+
+- **Usage**:  
+  Used during login to extract and store the agent’s **first name**, which is then inserted dynamically in email templates.
+
+---
+
+### 2. `email_templates` Sheet
+
+- **Sheet name**: `email_templates`  
+- **Columns (header row required):**
+
+| Level 1 Topic | Level 2 Subtopic | Level 3 Case | Tasks (semicolon-separated) | Backend Note | Email Subject | Email Body |
+|---------------|------------------|--------------|------------------------------|---------------|----------------|-------------|
+
+- **Format**:
+  - Each row defines a **resolution**
+  - Tasks are stored in a single cell, separated by semicolons (`;`)
+  - Hierarchy is built from topic columns automatically
+  - The app uses a parser to convert this flat format into the expected nested structure
+
+---
+
+## 💻 Application Flow
+
+1. **Login Screen**
+   - Prompts for either EID or first name
+   - If EID is matched, first name is extracted from the `users` sheet
+   - First name is stored in session
+
+2. **Template Interface**
+   - Displays a collapsible list of topics, subtopics, and cases
+   - Clicking a leaf node reveals:
+     - ✅ A checklist of tasks (visual only)
+     - 📝 Copy-ready backend note
+     - 📨 Copy-ready subject line
+     - ✍️ Editable email body with pre-filled `{{agent_name}}`
 
 ---
 
 ## 🧩 Placeholder Handling
 
-### 1. Automatic Placeholders
-
-- Only `{{agent_name}}` is supported.  
-- Replaced by the stored session name when rendering the `email_body`.
-
-### 2. Manual Placeholders
-
-- Format: `xXSomethingXx`  
-- **NOT** replaced automatically.  
-- Should be **bolded** in the UI to prompt manual input.
+- `{{agent_name}}`: Automatically replaced with agent’s name from session  
+- `xXSomethingXx`: Bolded placeholder shown to prompt manual edit (not auto-replaced)
 
 ---
 
-## 🎨 UI Details
+## 🎨 Interface Design
 
-- Plain inline CSS, **no frameworks or external resources**.  
-- Collapsible triangle indicators for expandable items.  
-- Subtle animation or background change when **all tasks** are checked.
-
----
-
-## 🛠 Technical Constraints
-
-- Must use **Google Apps Script** exclusively.  
-- No internet requests or external libraries.  
-- Clipboard handled with `navigator.clipboard.writeText`.  
-- Include fallback (`document.execCommand`) in comments.  
-- All logic and data must be bundled in the single script project.
+- Lightweight inline CSS (no frameworks or external stylesheets)
+- Clean, responsive layout with:
+  - Collapsible tree view
+  - Copy-to-clipboard buttons
+  - Smooth animations when all tasks are checked
+- Modal-based `About` section accessible via “?” icon
 
 ---
 
-## ✅ Optional Enhancements
+## ⚙️ Technical Notes
 
-- Subtle visual cue when all checkboxes are marked.  
-- Scroll or expand resolution when clicked in the menu.
+- Uses `navigator.clipboard.writeText` (with fallback in comments)
+- Loads template data on each app run — **no redeploy needed for updates**
+- Fully compatible with modern browsers under Google Workspace
 
+---
+
+## 🧪 Optional Enhancements
+
+- ✅ Scroll/expand to current resolution
+- ✅ Visual feedback when all tasks are marked
+- 🔄 Admin tool to preview changes before saving to sheet
+- 💡 Template suggestion system (future AI enhancement?)
+
+---
+
+## 🧡 Acknowledgments
+
+Built by Fabi (with some help from ChatGPT 😉)  
+Maintained with love for the team.  
+
+**Suggestions, improvements, or fixes?**  
+Feel free to reach out! Let's make this even better together.
+
+---
