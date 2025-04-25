@@ -28,6 +28,7 @@
         <h1>Email Templates</h1>
         <div class="user-info">
           <span id="user-name"></span>
+          <button id="about-button" class="btn small">?</button>
           <button id="logout-button" class="btn small">Logout</button>
         </div>
       </div>
@@ -86,6 +87,24 @@
       </div>
     </main>
   </div>
+
+  <!-- About Modal -->
+<div id="about-modal" class="modal hidden">
+  <div class="modal-content">
+    <span id="close-about" class="close-btn">&times;</span>
+    <h2>About This App</h2>
+    <p><strong>Email Templating System</strong> is a secure, user-friendly web app built with <strong>Google Apps Script</strong>, designed to replace a bulky spreadsheet used by the <strong>Customer Solutions Tech team</strong>.</p>
+    <ul>
+      <li>🔍 Quick login with name or Employee ID (EID)</li>
+      <li>📂 Dynamic topic navigation</li>
+      <li>📋 Task checklists for guidance</li>
+      <li>📝 Editable templates with smart placeholders</li>
+      <li>📎 One-click copy functionality</li>
+      <li>🔐 Secure, no external data access</li>
+    </ul>
+    <p>❤️ With love, from Fabi.</p>
+  </div>
+</div>
   
   <?!= include('scripts'); ?>
 </body>
