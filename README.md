@@ -1,4 +1,5 @@
 # 📬 Email Templating Web App  
+
 *A lightweight, dynamic email assistant for support teams – built with Google Apps Script*
 
 ---
