@@ -1,429 +1,443 @@
 <script>
+  /**
+   * Email Templating Web App - Client-side JavaScript
+   */
+
+  // Global state
+  let currentUser = null;
+  let topicsData = null;
+
+  // DOM Elements
+  document.addEventListener("DOMContentLoaded", function () {
+    // Login Elements
+    const loginSection = document.getElementById("login-section");
+    const appSection = document.getElementById("app-section");
+    const userInput = document.getElementById("user-input");
+    const loginButton = document.getElementById("login-button");
+    const loginError = document.getElementById("login-error");
+    const userName = document.getElementById("user-name");
+    const logoutButton = document.getElementById("logout-button");
+
+    // Main App Elements
+    const topicsMenu = document.getElementById("topics-menu");
+    const welcomeMessage = document.getElementById("welcome-message");
+    const resolutionSection = document.getElementById("resolution-section");
+    const resolutionTitle = document.getElementById("resolution-title");
+    const tasksContainer = document.getElementById("tasks-container");
+    const backendNote = document.getElementById("backend-note");
+    const emailSubject = document.getElementById("email-subject");
+    const emailBody = document.getElementById("email-body");
+
+    // Initialize the app
+    initApp();
+
     /**
-     * Email Templating Web App - Client-side JavaScript
+     * Initialize the application
      */
-    
-    // Global state
-    let currentUser = null;
-    let topicsData = null;
-    
-    // DOM Elements
-    document.addEventListener('DOMContentLoaded', function() {
-      // Login Elements
-      const loginSection = document.getElementById('login-section');
-      const appSection = document.getElementById('app-section');
-      const userInput = document.getElementById('user-input');
-      const loginButton = document.getElementById('login-button');
-      const loginError = document.getElementById('login-error');
-      const userName = document.getElementById('user-name');
-      const logoutButton = document.getElementById('logout-button');
-      
-      // Main App Elements
-      const topicsMenu = document.getElementById('topics-menu');
-      const welcomeMessage = document.getElementById('welcome-message');
-      const resolutionSection = document.getElementById('resolution-section');
-      const resolutionTitle = document.getElementById('resolution-title');
-      const tasksContainer = document.getElementById('tasks-container');
-      const backendNote = document.getElementById('backend-note');
-      const emailSubject = document.getElementById('email-subject');
-      const emailBody = document.getElementById('email-body');
-      
-      // Initialize the app
-      initApp();
-      
-      /**
-       * Initialize the application
-       */
-      function initApp() {
-        // Check for stored user session
-        checkUserSession();
-        
-        // Event listeners
-        loginButton.addEventListener('click', handleLogin);
-        userInput.addEventListener('keypress', function(e) {
-          if (e.key === 'Enter') {
-            handleLogin();
-          }
-        });
-        
-        logoutButton.addEventListener('click', handleLogout);
-        
-        // Copy buttons
-        document.querySelectorAll('.copy-btn').forEach(btn => {
-          btn.addEventListener('click', handleCopy);
-        });
-      }
-      
-      /**
-       * Check for existing user session
-       */
-      function checkUserSession() {
-        try {
-          const storedUser = sessionStorage.getItem('emailTemplateUser');
-          if (storedUser) {
-            currentUser = JSON.parse(storedUser);
-            showMainApp();
-          }
-        } catch (e) {
-          console.error('Error checking user session:', e);
-          // Clear potentially corrupted session data
-          sessionStorage.removeItem('emailTemplateUser');
+    function initApp() {
+      // Check for stored user session
+      checkUserSession();
+
+      // Event listeners
+      loginButton.addEventListener("click", handleLogin);
+      userInput.addEventListener("keypress", function (e) {
+        if (e.key === "Enter") {
+          handleLogin();
         }
-      }
-      
-      /**
-       * Handle user login
-       */
-      function handleLogin() {
-        const input = userInput.value.trim();
-        if (!input) {
-          showLoginError('Please enter your Employee ID or Name');
-          return;
+      });
+
+      logoutButton.addEventListener("click", handleLogout);
+
+      // Copy buttons
+      document.querySelectorAll(".copy-btn").forEach((btn) => {
+        btn.addEventListener("click", handleCopy);
+      });
+    }
+
+    /**
+     * Check for existing user session
+     */
+    function checkUserSession() {
+      try {
+        const storedUser = sessionStorage.getItem("emailTemplateUser");
+        if (storedUser) {
+          currentUser = JSON.parse(storedUser);
+          showMainApp();
         }
-        
-        loginButton.disabled = true;
-        loginButton.textContent = 'Loading...';
-        
-        // Call server-side function to validate user
-        google.script.run
-          .withSuccessHandler(function(result) {
-            loginButton.disabled = false;
-            loginButton.textContent = 'Continue';
-            
-            if (result.success) {
-              currentUser = result.user;
-              // Store user in session storage
-              sessionStorage.setItem('emailTemplateUser', JSON.stringify(currentUser));
-              showMainApp();
-            } else {
-              showLoginError(result.message);
-            }
-          })
-          .withFailureHandler(function(error) {
-            loginButton.disabled = false;
-            loginButton.textContent = 'Continue';
-            showLoginError('An error occurred. Please try again.');
-            console.error('Login error:', error);
-          })
-          .validateUser(input);
+      } catch (e) {
+        console.error("Error checking user session:", e);
+        // Clear potentially corrupted session data
+        sessionStorage.removeItem("emailTemplateUser");
       }
-      
-      /**
-       * Show login error message
-       */
-      function showLoginError(message) {
-        loginError.textContent = message;
-        loginError.style.opacity = 1;
+    }
+
+    /**
+     * Handle user login
+     */
+    function handleLogin() {
+      const input = userInput.value.trim();
+      if (!input) {
+        showLoginError("Please enter your Employee ID or Name");
+        return;
       }
-      
-      /**
-       * Handle user logout
-       */
-      function handleLogout() {
-        sessionStorage.removeItem('emailTemplateUser');
-        currentUser = null;
-        appSection.classList.add('hidden');
-        loginSection.classList.remove('hidden');
-        userInput.value = '';
-        loginError.textContent = '';
-      }
-      
-      /**
-       * Show the main application UI
-       */
-      function showMainApp() {
-        // Update UI
-        loginSection.classList.add('hidden');
-        appSection.classList.remove('hidden');
-        userName.textContent = `Hello, ${currentUser.firstName}`;
-        
-        // Load topics data
-        google.script.run
-          .withSuccessHandler(function(topics) {
-            topicsData = topics;
-            renderTopicsMenu(topics);
-          })
-          .withFailureHandler(function(error) {
-            console.error('Error loading topics:', error);
-            alert('Error loading templates. Please try refreshing the page.');
-          })
-          .getTopics();
-      }
-      
-      /**
-       * Render the topics menu recursively
-       */
-      function renderTopicsMenu(topics, parentElement = topicsMenu) {
-        // Clear existing content if this is the root call
-        if (parentElement === topicsMenu) {
-          parentElement.innerHTML = '';
-        }
-        
-        // Process each topic
-        Object.keys(topics).forEach(topic => {
-          const topicData = topics[topic];
-          const isLeaf = topicData.hasOwnProperty('resolution');
-          
-          // Create topic item container
-          const topicItem = document.createElement('div');
-          topicItem.className = 'topic-item';
-          
-          // Create topic header
-          const topicHeader = document.createElement('div');
-          topicHeader.className = 'topic-header';
-          
-          // Create toggle for non-leaf nodes
-          const topicToggle = document.createElement('span');
-          topicToggle.className = 'topic-toggle';
-          topicToggle.textContent = isLeaf ? '•' : '▶';
-          topicHeader.appendChild(topicToggle);
-          
-          // Create topic label
-          const topicLabel = document.createElement('span');
-          topicLabel.textContent = topic;
-          topicHeader.appendChild(topicLabel);
-          
-          // Store the path to this topic
-          topicHeader.dataset.path = topic;
-          
-          // Add header to item
-          topicItem.appendChild(topicHeader);
-          
-          // Handle children for non-leaf nodes
-          if (!isLeaf) {
-            // Create children container
-            const childrenContainer = document.createElement('div');
-            childrenContainer.className = 'topic-children';
-            
-            // Recursively render children
-            renderTopicsMenu(topicData, childrenContainer);
-            
-            // Add children container to item
-            topicItem.appendChild(childrenContainer);
-            
-            // Toggle children on click
-            topicHeader.addEventListener('click', function() {
-              const isExpanded = childrenContainer.classList.contains('expanded');
-              childrenContainer.classList.toggle('expanded', !isExpanded);
-              topicToggle.textContent = isExpanded ? '▶' : '▼';
-              topicToggle.style.transform = isExpanded ? 'rotate(0)' : 'rotate(90deg)';
-            });
-          } else {
-            // For leaf nodes, show the resolution when clicked
-            topicHeader.addEventListener('click', function() {
-              // Remove active class from all headers
-              document.querySelectorAll('.topic-header.active').forEach(header => {
-                header.classList.remove('active');
-              });
-              
-              // Add active class to this header
-              topicHeader.classList.add('active');
-              
-              // Show resolution
-              showResolution(topic, topicData.resolution);
-            });
-          }
-          
-          // Add the topic item to the parent element
-          parentElement.appendChild(topicItem);
-        });
-      }
-      
-      /**
-       * Show the selected resolution
-       */
-      function showResolution(title, resolution) {
-        // Hide welcome message
-        welcomeMessage.classList.add('hidden');
-        
-        // Show resolution section
-        resolutionSection.classList.remove('hidden');
-        
-        // Set the title
-        resolutionTitle.textContent = title;
-        
-        // Render tasks
-        renderTasks(resolution.tasks);
-        
-        // Set backend note
-        backendNote.textContent = resolution.backend_note;
-        
-        // Set email subject
-        emailSubject.textContent = resolution.email_subject;
-        
-        // Set email body with automatic placeholder replacement
-        const processedBody = processEmailBody(resolution.email_body);
-        emailBody.innerHTML = processedBody;
-        
-        // Scroll to resolution section
-        resolutionSection.scrollIntoView({ behavior: 'smooth' });
-      }
-      
-      /**
-       * Render task checkboxes
-       */
-      function renderTasks(tasks) {
-        tasksContainer.innerHTML = '';
-        
-        if (!tasks || tasks.length === 0) {
-          tasksContainer.innerHTML = '<p>No tasks for this template</p>';
-          return;
-        }
-        
-        tasks.forEach((task, index) => {
-          const taskItem = document.createElement('div');
-          taskItem.className = 'task-item';
-          
-          const checkbox = document.createElement('input');
-          checkbox.type = 'checkbox';
-          checkbox.id = `task-${index}`;
-          checkbox.className = 'task-checkbox';
-          checkbox.addEventListener('change', checkAllTasksCompleted);
-          
-          const label = document.createElement('label');
-          label.htmlFor = `task-${index}`;
-          label.className = 'task-label';
-          label.textContent = task;
-          
-          taskItem.appendChild(checkbox);
-          taskItem.appendChild(label);
-          tasksContainer.appendChild(taskItem);
-        });
-      }
-      
-      /**
-       * Check if all tasks are completed and update UI accordingly
-       */
-      function checkAllTasksCompleted() {
-        const checkboxes = tasksContainer.querySelectorAll('.task-checkbox');
-        const allChecked = Array.from(checkboxes).every(checkbox => checkbox.checked);
-        
-        if (allChecked && checkboxes.length > 0) {
-          tasksContainer.classList.add('all-checked');
-        } else {
-          tasksContainer.classList.remove('all-checked');
-        }
-      }
-      
-      /**
-       * Process email body with automatic placeholder replacement and highlighting
-       */
-      function processEmailBody(body) {
-        if (!body) return '';
-        
-        // Replace automatic placeholders
-        let processedBody = body.replace(/{{agent_name}}/g, currentUser.firstName);
-        
-        // Highlight manual placeholders
-        processedBody = highlightManualPlaceholders(processedBody);
-        
-        return processedBody;
-      }
-      
-      /**
-       * Highlight manual placeholders in the email body
-       */
-      function highlightManualPlaceholders(text) {
-        if (!text) return '';
-        
-        // Replace xXSomethingXx placeholders with highlighted versions
-        return text.replace(/xX([^xX]+)Xx/g, '<strong style="background-color: #ffff99; color: #333;">xX$1Xx</strong>');
-      }
-      
-      /**
-       * Handle copying content to clipboard
-       */
-      function handleCopy(event) {
-        const button = event.currentTarget;
-        const targetId = button.dataset.target;
-        const contentElement = document.getElementById(targetId);
-        
-        // Extract text content, handling contenteditable HTML if needed
-        let textToCopy = contentElement.textContent || '';
-        
-        // Use Clipboard API if available
-        if (navigator.clipboard && navigator.clipboard.writeText) {
-          navigator.clipboard.writeText(textToCopy)
-            .then(() => showCopiedFeedback(button, contentElement))
-            .catch(error => {
-              console.error('Error copying text:', error);
-              // Fall back to document.execCommand
-              fallbackCopy(contentElement);
-            });
-        } else {
-          // Fall back to document.execCommand for older browsers
-          fallbackCopy(contentElement);
-        }
-      }
-      
-      /**
-       * Fallback copy method using document.execCommand
-       */
-      function fallbackCopy(element) {
-        try {
-          // Create temporary textarea for text content
-          const textarea = document.createElement('textarea');
-          textarea.value = element.textContent;
-          document.body.appendChild(textarea);
-          textarea.select();
-          
-          // Execute copy command
-          const successful = document.execCommand('copy');
-          
-          // Remove temporary element
-          document.body.removeChild(textarea);
-          
-          if (successful) {
-            showCopiedFeedback(
-              document.querySelector(`.copy-btn[data-target="${element.id}"]`), 
-              element
+
+      loginButton.disabled = true;
+      loginButton.textContent = "Loading...";
+
+      // Call server-side function to validate user
+      google.script.run
+        .withSuccessHandler(function (result) {
+          loginButton.disabled = false;
+          loginButton.textContent = "Continue";
+
+          if (result.success) {
+            currentUser = result.user;
+            // Store user in session storage
+            sessionStorage.setItem(
+              "emailTemplateUser",
+              JSON.stringify(currentUser)
             );
+            showMainApp();
           } else {
-            console.error('Fallback copy failed');
+            showLoginError(result.message);
           }
-        } catch (err) {
-          console.error('Fallback copy error:', err);
+        })
+        .withFailureHandler(function (error) {
+          loginButton.disabled = false;
+          loginButton.textContent = "Continue";
+          showLoginError("An error occurred. Please try again.");
+          console.error("Login error:", error);
+        })
+        .validateUser(input);
+    }
+
+    /**
+     * Show login error message
+     */
+    function showLoginError(message) {
+      loginError.textContent = message;
+      loginError.style.opacity = 1;
+    }
+
+    /**
+     * Handle user logout
+     */
+    function handleLogout() {
+      sessionStorage.removeItem("emailTemplateUser");
+      currentUser = null;
+      appSection.classList.add("hidden");
+      loginSection.classList.remove("hidden");
+      userInput.value = "";
+      loginError.textContent = "";
+    }
+
+    /**
+     * Show the main application UI
+     */
+    function showMainApp() {
+      // Update UI
+      loginSection.classList.add("hidden");
+      appSection.classList.remove("hidden");
+      userName.textContent = `Hello, ${currentUser.firstName}`;
+
+      // Load topics data
+      google.script.run
+        .withSuccessHandler(function (topics) {
+          topicsData = topics;
+          renderTopicsMenu(topics);
+        })
+        .withFailureHandler(function (error) {
+          console.error("Error loading topics:", error);
+          alert("Error loading templates. Please try refreshing the page.");
+        })
+        .getTopics();
+    }
+
+    /**
+     * Render the topics menu recursively
+     */
+    function renderTopicsMenu(topics, parentElement = topicsMenu) {
+      // Clear existing content if this is the root call
+      if (parentElement === topicsMenu) {
+        parentElement.innerHTML = "";
+      }
+
+      // Process each topic
+      Object.keys(topics).forEach((topic) => {
+        const topicData = topics[topic];
+        const isLeaf = topicData.hasOwnProperty("resolution");
+
+        // Create topic item container
+        const topicItem = document.createElement("div");
+        topicItem.className = "topic-item";
+
+        // Create topic header
+        const topicHeader = document.createElement("div");
+        topicHeader.className = "topic-header";
+
+        // Create toggle for non-leaf nodes
+        const topicToggle = document.createElement("span");
+        topicToggle.className = "topic-toggle";
+        topicToggle.textContent = isLeaf ? "•" : "▶";
+        topicHeader.appendChild(topicToggle);
+
+        // Create topic label
+        const topicLabel = document.createElement("span");
+        topicLabel.textContent = topic;
+        topicHeader.appendChild(topicLabel);
+
+        // Store the path to this topic
+        topicHeader.dataset.path = topic;
+
+        // Add header to item
+        topicItem.appendChild(topicHeader);
+
+        // Handle children for non-leaf nodes
+        if (!isLeaf) {
+          // Create children container
+          const childrenContainer = document.createElement("div");
+          childrenContainer.className = "topic-children";
+
+          // Recursively render children
+          renderTopicsMenu(topicData, childrenContainer);
+
+          // Add children container to item
+          topicItem.appendChild(childrenContainer);
+
+          // Toggle children on click
+          topicHeader.addEventListener("click", function () {
+            const isExpanded = childrenContainer.classList.contains("expanded");
+            childrenContainer.classList.toggle("expanded", !isExpanded);
+            topicToggle.textContent = isExpanded ? "▶" : "▼";
+            topicToggle.style.transform = isExpanded
+              ? "rotate(0)"
+              : "rotate(90deg)";
+          });
+        } else {
+          // For leaf nodes, show the resolution when clicked
+          topicHeader.addEventListener("click", function () {
+            // Remove active class from all headers
+            document
+              .querySelectorAll(".topic-header.active")
+              .forEach((header) => {
+                header.classList.remove("active");
+              });
+
+            // Add active class to this header
+            topicHeader.classList.add("active");
+
+            // Show resolution
+            showResolution(topic, topicData.resolution);
+          });
         }
+
+        // Add the topic item to the parent element
+        parentElement.appendChild(topicItem);
+      });
+    }
+
+    /**
+     * Show the selected resolution
+     */
+    function showResolution(title, resolution) {
+      // Hide welcome message
+      welcomeMessage.classList.add("hidden");
+
+      // Show resolution section
+      resolutionSection.classList.remove("hidden");
+
+      // Set the title
+      resolutionTitle.textContent = title;
+
+      // Render tasks
+      renderTasks(resolution.tasks);
+
+      // Set backend note
+      backendNote.textContent = resolution.backend_note;
+
+      // Set email subject
+      emailSubject.textContent = resolution.email_subject;
+
+      // Set email body with automatic placeholder replacement
+      const processedBody = processEmailBody(resolution.email_body);
+      emailBody.innerHTML = processedBody;
+
+      // Scroll to resolution section
+      resolutionSection.scrollIntoView({ behavior: "smooth" });
+    }
+
+    /**
+     * Render task checkboxes
+     */
+    function renderTasks(tasks) {
+      tasksContainer.innerHTML = "";
+
+      if (!tasks || tasks.length === 0) {
+        tasksContainer.innerHTML = "<p>No tasks for this template</p>";
+        return;
       }
-      
-      /**
-       * Show visual feedback after copying
-       */
-      function showCopiedFeedback(button, contentElement) {
-        // Add 'copied' class to button
-        button.classList.add('copied');
-        button.textContent = 'Copied!';
-        
-        // Add flash animation to content
-        contentElement.classList.add('copy-flash');
-        
-        // Reset after animation completes
-        setTimeout(() => {
-          button.classList.remove('copied');
-          button.textContent = 'Copy';
-          contentElement.classList.remove('copy-flash');
-        }, 2000);
+
+      tasks.forEach((task, index) => {
+        const taskItem = document.createElement("div");
+        taskItem.className = "task-item";
+
+        const checkbox = document.createElement("input");
+        checkbox.type = "checkbox";
+        checkbox.id = `task-${index}`;
+        checkbox.className = "task-checkbox";
+        checkbox.addEventListener("change", checkAllTasksCompleted);
+
+        const label = document.createElement("label");
+        label.htmlFor = `task-${index}`;
+        label.className = "task-label";
+        label.textContent = task;
+
+        taskItem.appendChild(checkbox);
+        taskItem.appendChild(label);
+        tasksContainer.appendChild(taskItem);
+      });
+    }
+
+    /**
+     * Check if all tasks are completed and update UI accordingly
+     */
+    function checkAllTasksCompleted() {
+      const checkboxes = tasksContainer.querySelectorAll(".task-checkbox");
+      const allChecked = Array.from(checkboxes).every(
+        (checkbox) => checkbox.checked
+      );
+
+      if (allChecked && checkboxes.length > 0) {
+        tasksContainer.classList.add("all-checked");
+      } else {
+        tasksContainer.classList.remove("all-checked");
       }
-    });
+    }
 
-    // About modal logic
-const aboutButton = document.getElementById('about-button');
-const aboutModal = document.getElementById('about-modal');
-const closeAbout = document.getElementById('close-about');
+    /**
+     * Process email body with automatic placeholder replacement and highlighting
+     */
+    function processEmailBody(body) {
+      if (!body) return "";
 
-aboutButton.addEventListener('click', () => {
-  aboutModal.classList.remove('hidden');
-});
+      // Replace automatic placeholders
+      let processedBody = body.replace(
+        /{{agent_name}}/g,
+        currentUser.firstName
+      );
 
-closeAbout.addEventListener('click', () => {
-  aboutModal.classList.add('hidden');
-});
+      // Highlight manual placeholders
+      processedBody = highlightManualPlaceholders(processedBody);
 
-window.addEventListener('click', (e) => {
-  if (e.target == aboutModal) {
-    aboutModal.classList.add('hidden');
-  }
-});
+      return processedBody;
+    }
 
+    /**
+     * Highlight manual placeholders in the email body
+     */
+    function highlightManualPlaceholders(text) {
+      if (!text) return "";
 
-  </script>
+      // Replace xXSomethingXx placeholders with highlighted versions
+      return text.replace(
+        /xX([^xX]+)Xx/g,
+        '<strong style="background-color: #ffff99; color: #333;">xX$1Xx</strong>'
+      );
+    }
+
+    /**
+     * Handle copying content to clipboard
+     */
+    function handleCopy(event) {
+      const button = event.currentTarget;
+      const targetId = button.dataset.target;
+      const contentElement = document.getElementById(targetId);
+
+      // Extract text content, handling contenteditable HTML if needed
+      let textToCopy = contentElement.textContent || "";
+
+      // Use Clipboard API if available
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard
+          .writeText(textToCopy)
+          .then(() => showCopiedFeedback(button, contentElement))
+          .catch((error) => {
+            console.error("Error copying text:", error);
+            // Fall back to document.execCommand
+            fallbackCopy(contentElement);
+          });
+      } else {
+        // Fall back to document.execCommand for older browsers
+        fallbackCopy(contentElement);
+      }
+    }
+
+    /**
+     * Fallback copy method using document.execCommand
+     */
+    function fallbackCopy(element) {
+      try {
+        // Create temporary textarea for text content
+        const textarea = document.createElement("textarea");
+        textarea.value = element.textContent;
+        document.body.appendChild(textarea);
+        textarea.select();
+
+        // Execute copy command
+        const successful = document.execCommand("copy");
+
+        // Remove temporary element
+        document.body.removeChild(textarea);
+
+        if (successful) {
+          showCopiedFeedback(
+            document.querySelector(`.copy-btn[data-target="${element.id}"]`),
+            element
+          );
+        } else {
+          console.error("Fallback copy failed");
+        }
+      } catch (err) {
+        console.error("Fallback copy error:", err);
+      }
+    }
+
+    /**
+     * Show visual feedback after copying
+     */
+    function showCopiedFeedback(button, contentElement) {
+      // Add 'copied' class to button
+      button.classList.add("copied");
+      button.textContent = "Copied!";
+
+      // Add flash animation to content
+      contentElement.classList.add("copy-flash");
+
+      // Reset after animation completes
+      setTimeout(() => {
+        button.classList.remove("copied");
+        button.textContent = "Copy";
+        contentElement.classList.remove("copy-flash");
+      }, 2000);
+    }
+  });
+
+  // About modal logic
+  const aboutButton = document.getElementById("about-button");
+  const aboutModal = document.getElementById("about-modal");
+  const closeAbout = document.getElementById("close-about");
+
+  aboutButton.addEventListener("click", () => {
+    aboutModal.classList.remove("hidden");
+  });
+
+  closeAbout.addEventListener("click", () => {
+    aboutModal.classList.add("hidden");
+  });
+
+  window.addEventListener("click", (e) => {
+    if (e.target == aboutModal) {
+      aboutModal.classList.add("hidden");
+    }
+  });
+</script>
