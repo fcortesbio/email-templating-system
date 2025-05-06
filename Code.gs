@@ -72,3 +72,27 @@ function getUser(query) {
 function getTopics() {
   return topics;
 }
+
+/**
+ * Create a draft email requesting for adding a new user
+ */
+function createRegistrationDraft(firstName, lastName, eid) {
+  const subject = "Email Templating System - New EID Registration Request";
+  const body = `
+  
+  Hello, 
+  
+  Kindly add my information to our Email Templating System database: 
+
+  First Name: ${firstName}
+  Last Name: ${lastName}
+  EID: ${eid}
+
+  Regards,
+
+  --Requested via the Email Templating System form.--
+  `.trim();
+
+  const recipient = "myemail@server.com";
+  GmailApp.createDraft(recipient, subject, body)
+}

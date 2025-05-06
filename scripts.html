@@ -135,6 +135,28 @@
     };
 
     /**
+     * Handle registration form submission and display a feedback message
+     */
+    function submitRegistration() {
+      const firstName = document.getElementById("reg-first-name").value.trim();
+      const lastName = document.getElementById("reg-last-name").value.trim();
+      const eid = document.getElementById("reg-eid").value.trim();
+
+      if (!firstName || !lastName || !eid) {
+        document.getElementById("reg-message").innerText =
+          "All fields are required.";
+        return;
+      }
+
+      google.script.run
+        .withSuccessHandler(() => {
+          document.getElementById("reg-message").innerText =
+            "Email draft created. Please check your Drafts folder and send me a message.";
+        })
+        .createRegistrationDraft(firstName, lastName, eid);
+    }
+
+    /**
      * Handle user logout
      */
     function handleLogout() {
