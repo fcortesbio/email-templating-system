@@ -2,6 +2,7 @@
 <html>
   <head>
     <base target="_top" />
+<<<<<<< Updated upstream
     <style>
       body {
         font-family: sans-serif;
@@ -44,20 +45,53 @@
         }
       }
     </style>
+=======
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Email Templates</title>
+    <?!= include('styles'); ?>
+>>>>>>> Stashed changes
   </head>
   <body>
-    <div id="app"></div>
+    <!-- Login Section -->
+    <div id="login-section" class="section">
+      <div class="login-container">
+        <h1>Email Templates</h1>
+        <p>Enter your Employee ID or Name to continue</p>
+        <div class="input-group">
+          <input
+            type="text"
+            id="user-input"
+            placeholder="Employee ID or Name"
+            aria-label="Employee ID or Name"
+          />
+          <button id="login-button" class="btn primary">Continue</button>
+        </div>
+        <p id="login-error" class="error-message"></p>
+      </div>
+    </div>
 
-    <script>
-      const app = document.getElementById("app");
-      const userNameKey = "agentName";
+    <!-- Main App Section (hidden initially) -->
+    <div id="app-section" class="section hidden">
+      <header>
+        <div class="header-content">
+          <h1>Email Templates</h1>
+          <div class="user-info">
+            <span id="user-name"></span>
+            <button id="about-button" class="btn small">?</button>
+            <button id="logout-button" class="btn small">Logout</button>
+          </div>
+        </div>
+      </header>
 
-      function renderLogin() {
-        app.innerHTML = `<p>Welcome! Please enter your Employee ID or Name:</p>
-          <input type="text" id="loginInput" />
-          <button onclick="submitLogin()">Submit</button>`;
-      }
+      <main>
+        <div class="container">
+          <div class="sidebar">
+            <h2>Topics</h2>
+            <div id="topics-menu" class="topics-menu"></div>
+          </div>
 
+<<<<<<< Updated upstream
       function submitLogin() {
         const input = document.getElementById("loginInput").value;
         google.script.run
@@ -67,11 +101,18 @@
           })
           .getUserFirstName(input);
       }
+=======
+          <div class="content">
+            <div id="welcome-message" class="welcome-message">
+              <h2>Welcome to Email Templates</h2>
+              <p>Select a topic from the menu to view templates</p>
+            </div>
+>>>>>>> Stashed changes
 
-      function renderApp() {
-        const name = sessionStorage.getItem(userNameKey);
-        if (!name) return renderLogin();
+            <div id="resolution-section" class="resolution hidden">
+              <h2 id="resolution-title">Template Title</h2>
 
+<<<<<<< Updated upstream
         google.script.run
           .withSuccessHandler((topics) => {
             const container = document.createElement("div");
@@ -147,5 +188,79 @@
       if (existing) renderApp();
       else renderLogin();
     </script>
+=======
+              <div class="resolution-content">
+                <div class="tasks-section">
+                  <h3>Tasks</h3>
+                  <div id="tasks-container" class="tasks-container"></div>
+                </div>
+
+                <div class="template-section">
+                  <div class="template-item">
+                    <div class="template-header">
+                      <h3>Backend Note</h3>
+                      <button class="copy-btn" data-target="backend-note">
+                        Copy
+                      </button>
+                    </div>
+                    <div id="backend-note" class="template-content"></div>
+                  </div>
+
+                  <div class="template-item">
+                    <div class="template-header">
+                      <h3>Email Subject</h3>
+                      <button class="copy-btn" data-target="email-subject">
+                        Copy
+                      </button>
+                    </div>
+                    <div id="email-subject" class="template-content"></div>
+                  </div>
+
+                  <div class="template-item">
+                    <div class="template-header">
+                      <h3>Email Body</h3>
+                      <button class="copy-btn" data-target="email-body">
+                        Copy
+                      </button>
+                    </div>
+                    <div
+                      id="email-body"
+                      class="template-content"
+                      contenteditable="true"
+                    ></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <!-- About Modal -->
+    <div id="about-modal" class="modal hidden">
+      <div class="modal-content">
+        <span id="close-about" class="close-btn">&times;</span>
+        <h2>About This App</h2>
+        <p>
+          <strong>Email Templating System</strong> is a secure, user-friendly
+          web app built with <strong>Google Apps Script</strong>, designed to
+          replace a bulky spreadsheet used by the
+          <strong>Customer Solutions Tech team</strong>.
+        </p>
+        <ul>
+          <li>🔍 Quick login with name or Employee ID (EID)</li>
+          <li>📂 Dynamic topic navigation</li>
+          <li>📋 Task checklists for guidance</li>
+          <li>📝 Editable templates with smart placeholders</li>
+          <li>📎 One-click copy functionality</li>
+          <li>🔐 Secure, no external data access</li>
+        </ul>
+        <p>❤️ With love, from Fabi.</p>
+      </div>
+    </div>
+
+    <?!= include('scripts'); ?>
+>>>>>>> Stashed changes
   </body>
 </html>
