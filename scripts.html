@@ -117,13 +117,22 @@
     function showLoginError(message) {
       if (message === "Employee ID not found") {
         loginError.innerHTML = `
-      ${message}. <a href="#" onclick="showRegistrationForm()">Request registration</a>
+      ${message}. <br><button onclick="showRegistrationForm()">Request registration</button>
     `;
       } else {
         loginError.textContent = message;
       }
       loginError.style.opacity = 1;
     }
+
+    /**
+     * Show registration form link
+     * This declaration attaches the function directly to the window object, making it visible from dynamic DOM events.
+     */
+    window.showRegistrationForm = () => {
+      document.getElementById("registration-form").style.display = "block";
+      document.getElementById("reg-message").innerText = "";
+    };
 
     /**
      * Handle user logout
