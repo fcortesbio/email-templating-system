@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Email Templating Web App for Support Agents
  * Main controller script for the web application
  */
@@ -79,19 +79,23 @@ function getTopics() {
 function createRegistrationDraft(firstName, lastName, eid) {
   const subject = "Email Templating System - New EID Registration Request";
   const body = `
-Hello, 
+Hello,
 
-Kindly add my information to our Email Templating System database: 
+
+Kindly add my information to our Email Templating System database:
+
 
 First Name: ${firstName}
 Last Name: ${lastName}
 EID: ${eid}
 
+
 Regards,
 
+
 --Requested via the Email Templating System form.--
-  `.trim();
+ `.trim();
 
   const recipient = "myemail@server.com";
-  GmailApp.createDraft(recipient, subject, body)
+  GmailApp.createDraft(recipient, subject, body);
 }
