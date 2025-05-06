@@ -26,6 +26,19 @@
       </div>
     </div>
 
+    <!-- EID Registration Form (Initially Hidden) -->
+    <div id="registration-form" style="display: none; margin-top: 1em; padding: 1em; border: 1px solid #ccc; border-radius: 8px;">
+      <h3>Request Registration</h3>
+      <p>Please fill out this form to request to be registered:</p>
+      <label>First Name: <input type="text" id="reg-first-name" /></label><br><br>
+      <label>Last Name: <input type="text" id="reg-last-name" /></label><br><br>
+      <label>EID: <input type="text" id="reg-eid" /></label><br><br>
+      <button onclick="submitRegistration()">Create draft</button>
+      <p id="reg-message" style="color: green;"></p>
+    </div>   
+    
+    <div id="registration-form"
+
     <!-- Main App Section (hidden initially) -->
     <div id="app-section" class="section hidden">
       <header>
