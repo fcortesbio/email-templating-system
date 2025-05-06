@@ -9,10 +9,10 @@
  * @return {HtmlOutput} The HTML page for the web app
  */
 function doGet(e) {
-  return HtmlService.createTemplateFromFile('index')
+  return HtmlService.createTemplateFromFile("index")
     .evaluate()
-    .setTitle('Email Templates')
-    .addMetaTag('viewport', 'width=device-width, initial-scale=1')
+    .setTitle("Email Templates")
+    .addMetaTag("viewport", "width=device-width, initial-scale=1")
     .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
 }
 
@@ -33,10 +33,10 @@ function include(filename) {
 function getUser(query) {
   // Get the active spreadsheet and sheet
   const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const sheet = ss.getSheetByName('users');
+  const sheet = ss.getSheetByName("users");
 
   if (!sheet) {
-    Logger.log('Users sheet not found');
+    Logger.log("Users sheet not found");
     return null;
   }
 
@@ -53,11 +53,11 @@ function getUser(query) {
 
     if (isEid && eid.toString() === query) {
       // Extract first name from "Lastname, Firstname" format
-      const firstName = fullName.split(',')[1].trim();
+      const firstName = fullName.split(",")[1].trim();
       return { firstName: firstName };
     } else if (!isEid && fullName.toLowerCase().includes(query.toLowerCase())) {
       // Extract first name from "Lastname, Firstname" format
-      const firstName = fullName.split(',')[1].trim();
+      const firstName = fullName.split(",")[1].trim();
       return { firstName: firstName };
     }
   }

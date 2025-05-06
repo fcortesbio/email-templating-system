@@ -8,10 +8,10 @@
  * @return {Object} Result object with success flag and user data or error message
  */
 function validateUser(input) {
-  if (!input || input.trim() === '') {
+  if (!input || input.trim() === "") {
     return {
       success: false,
-      message: 'Please enter your Employee ID or Name'
+      message: "Please enter your Employee ID or Name",
     };
   }
 
@@ -25,29 +25,29 @@ function validateUser(input) {
     if (user) {
       return {
         success: true,
-        user: user
+        user: user,
       };
     } else {
       return {
         success: false,
-        message: 'Employee ID not found'
+        message: "Employee ID not found",
       };
     }
   } else {
     // It's a name (contains letters)
     // Only keep the first word if multiple words
-    processedInput = processedInput.split(' ')[0];
+    processedInput = processedInput.split(" ")[0];
 
     const user = getUser(processedInput);
     if (user) {
       return {
         success: true,
-        user: user
+        user: user,
       };
     } else {
       return {
         success: false,
-        message: 'Name not found'
+        message: "Name not found",
       };
     }
   }
