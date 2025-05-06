@@ -137,7 +137,7 @@
     /**
      * Handle registration form submission and display a feedback message
      */
-    function submitRegistration() {
+    window.submitRegistration = () => {
       const firstName = document.getElementById("reg-first-name").value.trim();
       const lastName = document.getElementById("reg-last-name").value.trim();
       const eid = document.getElementById("reg-eid").value.trim();
@@ -154,7 +154,7 @@
             "Email draft created. Please check your Drafts folder and send me a message.";
         })
         .createRegistrationDraft(firstName, lastName, eid);
-    }
+    };
 
     /**
      * Handle user logout

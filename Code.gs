@@ -79,18 +79,17 @@ function getTopics() {
 function createRegistrationDraft(firstName, lastName, eid) {
   const subject = "Email Templating System - New EID Registration Request";
   const body = `
-  
-  Hello, 
-  
-  Kindly add my information to our Email Templating System database: 
+Hello, 
 
-  First Name: ${firstName}
-  Last Name: ${lastName}
-  EID: ${eid}
+Kindly add my information to our Email Templating System database: 
 
-  Regards,
+First Name: ${firstName}
+Last Name: ${lastName}
+EID: ${eid}
 
-  --Requested via the Email Templating System form.--
+Regards,
+
+--Requested via the Email Templating System form.--
   `.trim();
 
   const recipient = "myemail@server.com";
