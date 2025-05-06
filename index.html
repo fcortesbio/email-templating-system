@@ -26,20 +26,18 @@
       </div>
     </div>
 
-
-   <!-- EID Registration Form (Initially Hidden) -->
-   <div id="registration-card" style="display: none;" class="card">
-     <h3>Request Registration</h3>
-     <p>Please fill out this form to request to be registered:</p>
-     <label>First Name: <input type="text" id="reg-first-name" /></label><br><br>
-     <label>Last Name: <input type="text" id="reg-last-name" /></label><br><br>
-     <label>EID: <input type="text" id="reg-eid" /></label><br><br>
-     <button onclick="submitRegistration()">Create draft</button>
-     <p id="reg-message" style="color: green;"></p>
-   </div>
-
-
-
+    <!-- EID Registration Form (Initially Hidden) -->
+    <div id="registration-card" style="display: none" class="card">
+      <h3>Request Registration</h3>
+      <p>Please fill out this form to request to be registered:</p>
+      <label>First Name: <input type="text" id="reg-first-name" /></label
+      ><br /><br />
+      <label>Last Name: <input type="text" id="reg-last-name" /></label
+      ><br /><br />
+      <label>EID: <input type="text" id="reg-eid" /></label><br /><br />
+      <button onclick="submitRegistration()">Create draft</button>
+      <p id="reg-message" style="color: green"></p>
+    </div>
 
     <!-- Main App Section (hidden initially) -->
     <div id="app-section" class="section hidden">
@@ -54,7 +52,6 @@
         </div>
       </header>
 
-
       <main>
         <div class="container">
           <div class="sidebar">
@@ -62,24 +59,20 @@
             <div id="topics-menu" class="topics-menu"></div>
           </div>
 
-
           <div class="content">
             <div id="welcome-message" class="welcome-message">
               <h2>Welcome to Email Templates</h2>
               <p>Select a topic from the menu to view templates</p>
             </div>
 
-
             <div id="resolution-section" class="resolution hidden">
               <h2 id="resolution-title">Template Title</h2>
-
 
               <div class="resolution-content">
                 <div class="tasks-section">
                   <h3>Tasks</h3>
                   <div id="tasks-container" class="tasks-container"></div>
                 </div>
-
 
                 <div class="template-section">
                   <div class="template-item">
@@ -92,7 +85,6 @@
                     <div id="backend-note" class="template-content"></div>
                   </div>
 
-
                   <div class="template-item">
                     <div class="template-header">
                       <h3>Email Subject</h3>
@@ -102,7 +94,6 @@
                     </div>
                     <div id="email-subject" class="template-content"></div>
                   </div>
-
 
                   <div class="template-item">
                     <div class="template-header">
@@ -124,7 +115,6 @@
         </div>
       </main>
     </div>
-
 
     <!-- About Modal -->
     <div id="about-modal" class="modal hidden">
@@ -151,7 +141,6 @@
         <p>❤️ With love, from Fabi.</p>
       </div>
     </div>
-
 
     <?!= include('scripts'); ?>
   </body>
