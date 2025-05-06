@@ -6,7 +6,6 @@
     padding: 0;
   }
 
-
   body {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
       Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
@@ -16,7 +15,6 @@
     background-color: #f5f7fa;
   }
 
-
   /* Layout */
   .section {
     min-height: 100vh;
@@ -24,11 +22,9 @@
     flex-direction: column;
   }
 
-
   .hidden {
     display: none !important;
   }
-
 
   header {
     background-color: #1a73e8;
@@ -36,7 +32,6 @@
     padding: 1rem;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   }
-
 
   .header-content {
     display: flex;
@@ -47,7 +42,6 @@
     width: 100%;
   }
 
-
   .container {
     display: flex;
     max-width: 1200px;
@@ -55,7 +49,6 @@
     min-height: calc(100vh - 120px);
     gap: 1.5rem;
   }
-
 
   /* Login Section */
   .login-container {
@@ -68,18 +61,15 @@
     text-align: center;
   }
 
-
   .login-container h1 {
     color: #1a73e8;
     margin-bottom: 1rem;
   }
 
-
   .input-group {
     display: flex;
     margin: 1.5rem 0;
   }
-
 
   .input-group input {
     flex: 1;
@@ -89,14 +79,12 @@
     font-size: 1rem;
   }
 
-
   .error-message {
     color: #d93025;
     font-size: 0.9rem;
     margin-top: 0.5rem;
     min-height: 1.2rem;
   }
-
 
   /* Buttons */
   .btn {
@@ -110,22 +98,18 @@
     transition: background-color 0.2s;
   }
 
-
   .btn.primary {
     border-radius: 0 4px 4px 0;
   }
-
 
   .btn.small {
     padding: 0.4rem 0.8rem;
     font-size: 0.85rem;
   }
 
-
   .btn:hover {
     background-color: #0d62d9;
   }
-
 
   .copy-btn {
     background-color: transparent;
@@ -138,19 +122,16 @@
     transition: all 0.2s;
   }
 
-
   .copy-btn:hover {
     background-color: #1a73e8;
     color: white;
   }
-
 
   .copy-btn.copied {
     background-color: #34a853;
     border-color: #34a853;
     color: white;
   }
-
 
   /* Sidebar */
   .sidebar {
@@ -164,13 +145,11 @@
     top: 1rem;
   }
 
-
   .sidebar h2 {
     color: #1a73e8;
     margin-bottom: 1rem;
     font-size: 1.25rem;
   }
-
 
   /* Content */
   .content {
@@ -181,13 +160,11 @@
     padding: 1.5rem;
   }
 
-
   .resolution-content {
     display: flex;
     flex-direction: column;
     gap: 1.5rem;
   }
-
 
   /* Welcome Message */
   .welcome-message {
@@ -195,23 +172,19 @@
     padding: 2rem;
   }
 
-
   .welcome-message h2 {
     color: #1a73e8;
     margin-bottom: 1rem;
   }
-
 
   /* Topics Menu */
   .topics-menu {
     margin-top: 0.5rem;
   }
 
-
   .topic-item {
     margin-bottom: 0.5rem;
   }
-
 
   .topic-header {
     display: flex;
@@ -224,17 +197,14 @@
     transition: background-color 0.2s;
   }
 
-
   .topic-header:hover {
     background-color: #f0f4f8;
   }
-
 
   .topic-header.active {
     background-color: #e4efff;
     color: #1a73e8;
   }
-
 
   .topic-toggle {
     display: inline-block;
@@ -245,18 +215,15 @@
     transition: transform 0.2s;
   }
 
-
   .topic-children {
     margin-left: 1.5rem;
     display: none;
   }
 
-
   .topic-children.expanded {
     display: block;
     animation: slideDown 0.3s ease;
   }
-
 
   /* Resolution Section */
   .resolution h2 {
@@ -266,11 +233,9 @@
     border-bottom: 1px solid #eee;
   }
 
-
   .template-item {
     margin-bottom: 1.5rem;
   }
-
 
   .template-header {
     display: flex;
@@ -279,13 +244,11 @@
     margin-bottom: 0.5rem;
   }
 
-
   .template-header h3 {
     font-size: 1rem;
     color: #555;
     font-weight: 600;
   }
-
 
   .template-content {
     background-color: #f8f9fa;
@@ -301,17 +264,14 @@
     line-height: 1.5;
   }
 
-
   #email-body {
     min-height: 200px;
   }
-
 
   /* Task Checkboxes */
   .tasks-container {
     margin-bottom: 1rem;
   }
-
 
   .task-item {
     display: flex;
@@ -319,25 +279,21 @@
     margin-bottom: 0.75rem;
   }
 
-
   .task-checkbox {
     margin-right: 0.5rem;
     margin-top: 0.25rem;
     cursor: pointer;
   }
 
-
   .task-label {
     flex: 1;
     transition: color 0.2s;
   }
 
-
   .task-checkbox:checked + .task-label {
     text-decoration: line-through;
     color: #888;
   }
-
 
   .tasks-container.all-checked {
     background-color: #e6f4ea;
@@ -346,7 +302,6 @@
     animation: pulse 1s;
   }
 
-
   /* User Info */
   .user-info {
     display: flex;
@@ -354,11 +309,9 @@
     gap: 1rem;
   }
 
-
   #user-name {
     font-weight: 500;
   }
-
 
   /* Animations */
   @keyframes slideDown {
@@ -372,7 +325,6 @@
     }
   }
 
-
   @keyframes pulse {
     0% {
       background-color: #e6f4ea;
@@ -385,7 +337,6 @@
     }
   }
 
-
   @keyframes flash {
     0% {
       background-color: #e4efff;
@@ -395,11 +346,9 @@
     }
   }
 
-
   .copy-flash {
     animation: flash 1s;
   }
-
 
   /* Responsive Design */
   @media (max-width: 768px) {
@@ -407,12 +356,10 @@
       flex-direction: column;
     }
 
-
     .sidebar {
       width: 100%;
       position: static;
     }
-
 
     .header-content {
       flex-direction: column;
@@ -420,12 +367,10 @@
       text-align: center;
     }
 
-
     .header-content h1 {
       font-size: 1.5rem;
     }
   }
-
 
   /* Modal Styles */
   .modal {
@@ -441,7 +386,6 @@
     z-index: 1000;
   }
 
-
   .modal-content {
     background: white;
     padding: 2rem;
@@ -452,7 +396,6 @@
     position: relative;
   }
 
-
   .close-btn {
     position: absolute;
     right: 1rem;
@@ -462,8 +405,83 @@
     color: #666;
   }
 
-
   .hidden {
     display: none;
+  }
+
+  .card {
+    max-width: 420px;
+    margin: 2em auto;
+    padding: 2em;
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    font-family: "Segoe UI", sans-serif;
+  }
+
+  .card h3 {
+    margin-top: 0;
+    font-size: 1.4em;
+    color: #333;
+    text-align: center;
+  }
+
+  .card p {
+    font-size: 0.95em;
+    color: #555;
+    text-align: center;
+    margin-bottom: 1.5em;
+  }
+
+  .card label {
+    display: block;
+    font-weight: 500;
+    color: #333;
+    margin-bottom: 0.25em;
+  }
+
+  .card input[type="text"] {
+    width: 100%;
+    padding: 0.6em 0.75em;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    margin-bottom: 1em;
+    font-size: 0.95em;
+    box-sizing: border-box;
+  }
+
+  .card button {
+    display: block;
+    width: 100%;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    padding: 0.7em;
+    font-size: 0.95em;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+
+  .card button:hover {
+    background-color: #005fa3;
+  }
+
+  .primary-button {
+    display: block;
+    width: 100%;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    padding: 0.7em;
+    font-size: 0.95em;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    margin-top: 1em;
+  }
+
+  .primary-button:hover {
+    background-color: #005fa3;
   }
 </style>
