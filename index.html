@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html>
   <head>
     <base target="_top" />
@@ -24,6 +24,19 @@
         </div>
         <p id="login-error" class="error-message"></p>
       </div>
+    </div>
+
+    <!-- EID Registration Form (Initially Hidden) -->
+    <div id="registration-card" style="display: none" class="card">
+      <h3>Request Registration</h3>
+      <p>Please fill out this form to request to be registered:</p>
+      <label>First Name: <input type="text" id="reg-first-name" /></label
+      ><br /><br />
+      <label>Last Name: <input type="text" id="reg-last-name" /></label
+      ><br /><br />
+      <label>EID: <input type="text" id="reg-eid" /></label><br /><br />
+      <button onclick="submitRegistration()">Create draft</button>
+      <p id="reg-message" style="color: green"></p>
     </div>
 
     <!-- Main App Section (hidden initially) -->
@@ -123,6 +136,7 @@
           <li>📎 One-click copy functionality</li>
           <li>🔐 Secure, no external data access</li>
         </ul>
+        <br />
         <p>Enjoy, and feel free to contact for any fix/suggestion!</p>
         <p>❤️ With love, from Fabi.</p>
       </div>

@@ -3,9 +3,11 @@
    * Email Templating Web App - Client-side JavaScript
    */
 
+
   // Global state
   let currentUser = null;
   let topicsData = null;
+
 
   // DOM Elements
   document.addEventListener("DOMContentLoaded", function () {
@@ -18,6 +20,7 @@
     const userName = document.getElementById("user-name");
     const logoutButton = document.getElementById("logout-button");
 
+
     // Main App Elements
     const topicsMenu = document.getElementById("topics-menu");
     const welcomeMessage = document.getElementById("welcome-message");
@@ -28,8 +31,10 @@
     const emailSubject = document.getElementById("email-subject");
     const emailBody = document.getElementById("email-body");
 
+
     // Initialize the app
     initApp();
+
 
     /**
      * Initialize the application
@@ -37,6 +42,7 @@
     function initApp() {
       // Check for stored user session
       checkUserSession();
+
 
       // Event listeners
       loginButton.addEventListener("click", handleLogin);
@@ -46,13 +52,16 @@
         }
       });
 
+
       logoutButton.addEventListener("click", handleLogout);
+
 
       // Copy buttons
       document.querySelectorAll(".copy-btn").forEach((btn) => {
         btn.addEventListener("click", handleCopy);
       });
     }
+
 
     /**
      * Check for existing user session
@@ -71,6 +80,7 @@
       }
     }
 
+
     /**
      * Handle user login
      */
@@ -81,14 +91,17 @@
         return;
       }
 
+
       loginButton.disabled = true;
       loginButton.textContent = "Loading...";
+
 
       // Call server-side function to validate user
       google.script.run
         .withSuccessHandler(function (result) {
           loginButton.disabled = false;
           loginButton.textContent = "Continue";
+
 
           if (result.success) {
             currentUser = result.user;
@@ -111,61 +124,74 @@
         .validateUser(input);
     }
 
-    /**
-     * Show login error message
-     */
-    function showLoginError(message) {
-      if (message === "Employee ID not found") {
-        loginError.innerHTML = `
+
+   /**
+    * Show login error message
+    */
+   function showLoginError(message) {
+     if (message === "Employee ID not found") {
+       loginError.innerHTML = `
      ${message}. <br><button class="primary-button" onclick="showRegistrationForm()">Request registration</button>
    `;
-      } else {
-        loginError.textContent = message;
-      }
-      loginError.style.opacity = 1;
-    }
+     } else {
+       loginError.textContent = message;
+     }
+     loginError.style.opacity = 1;
+   }
 
-    /**
-     * Show registration form link
-     * This declaration attaches the function directly to the window object, making it visible from dynamic DOM events.
-     */
-    window.showRegistrationForm = () => {
-      const form = document.getElementById("registration-card");
-      form.style.display = "block";
 
-      // Reset message
-      document.getElementById("reg-message").innerText = "";
+   /**
+    * Show registration form link
+    * This declaration attaches the function directly to the window object, making it visible from dynamic DOM events.
+    */
+   window.showRegistrationForm = () => {
+     const form = document.getElementById("registration-card");
+     form.style.display = "block";
 
-      // Scroll into view smoothly
-      form.scrollIntoView({ behavior: "smooth", block: "start" });
-    };
 
-    /**
-     * Handle registration form submission and display a feedback message
-     */
-    window.submitRegistration = () => {
-      const firstName = document.getElementById("reg-first-name").value.trim();
-      const lastName = document.getElementById("reg-last-name").value.trim();
-      const eid = document.getElementById("reg-eid").value.trim();
+     // Reset message
+     document.getElementById("reg-message").innerText = "";
 
-      if (!firstName || !lastName || !eid) {
-        document.getElementById("reg-message").innerText =
-          "All fields are required.";
-        return;
-      }
 
-      google.script.run
-        .withSuccessHandler(() => {
-          message = document.getElementById("reg-message");
-          message.innerText = `
+     // Scroll into view smoothly
+     form.scrollIntoView({ behavior: "smooth", block: "start" });
+};
+
+
+
+
+   /**
+    * Handle registration form submission and display a feedback message
+    */
+   window.submitRegistration = () => {
+     const firstName = document.getElementById("reg-first-name").value.trim();
+     const lastName = document.getElementById("reg-last-name").value.trim();
+     const eid = document.getElementById("reg-eid").value.trim();
+
+
+     if (!firstName || !lastName || !eid) {
+       document.getElementById("reg-message").innerText =
+         "All fields are required.";
+       return;
+     }
+
+
+     google.script.run
+       .withSuccessHandler(() => {
+         message = document.getElementById("reg-message")
+         message.innerText =
+           `
            Email draft created.
            Please check your Drafts folder and send me a message.
           
            `;
-          message.scrollIntoView({ behavior: "smooth", block: "start" });
-        })
-        .createRegistrationDraft(firstName, lastName, eid);
-    };
+       message.scrollIntoView({ behavior: "smooth", block: "start" });
+
+
+       })
+       .createRegistrationDraft(firstName, lastName, eid);
+   }
+
 
     /**
      * Handle user logout
@@ -179,6 +205,7 @@
       loginError.textContent = "";
     }
 
+
     /**
      * Show the main application UI
      */
@@ -187,6 +214,7 @@
       loginSection.classList.add("hidden");
       appSection.classList.remove("hidden");
       userName.textContent = `Hello, ${currentUser.firstName}`;
+
 
       // Load topics data
       google.script.run
@@ -201,6 +229,7 @@
         .getTopics();
     }
 
+
     /**
      * Render the topics menu recursively
      */
@@ -210,18 +239,22 @@
         parentElement.innerHTML = "";
       }
 
+
       // Process each topic
       Object.keys(topics).forEach((topic) => {
         const topicData = topics[topic];
         const isLeaf = topicData.hasOwnProperty("resolution");
 
+
         // Create topic item container
         const topicItem = document.createElement("div");
         topicItem.className = "topic-item";
 
+
         // Create topic header
         const topicHeader = document.createElement("div");
         topicHeader.className = "topic-header";
+
 
         // Create toggle for non-leaf nodes
         const topicToggle = document.createElement("span");
@@ -229,16 +262,20 @@
         topicToggle.textContent = isLeaf ? "•" : "▶";
         topicHeader.appendChild(topicToggle);
 
+
         // Create topic label
         const topicLabel = document.createElement("span");
         topicLabel.textContent = topic;
         topicHeader.appendChild(topicLabel);
 
+
         // Store the path to this topic
         topicHeader.dataset.path = topic;
 
+
         // Add header to item
         topicItem.appendChild(topicHeader);
+
 
         // Handle children for non-leaf nodes
         if (!isLeaf) {
@@ -246,11 +283,14 @@
           const childrenContainer = document.createElement("div");
           childrenContainer.className = "topic-children";
 
+
           // Recursively render children
           renderTopicsMenu(topicData, childrenContainer);
 
+
           // Add children container to item
           topicItem.appendChild(childrenContainer);
+
 
           // Toggle children on click
           topicHeader.addEventListener("click", function () {
@@ -271,18 +311,22 @@
                 header.classList.remove("active");
               });
 
+
             // Add active class to this header
             topicHeader.classList.add("active");
+
 
             // Show resolution
             showResolution(topic, topicData.resolution);
           });
         }
 
+
         // Add the topic item to the parent element
         parentElement.appendChild(topicItem);
       });
     }
+
 
     /**
      * Show the selected resolution
@@ -291,28 +335,36 @@
       // Hide welcome message
       welcomeMessage.classList.add("hidden");
 
+
       // Show resolution section
       resolutionSection.classList.remove("hidden");
+
 
       // Set the title
       resolutionTitle.textContent = title;
 
+
       // Render tasks
       renderTasks(resolution.tasks);
+
 
       // Set backend note
       backendNote.textContent = resolution.backend_note;
 
+
       // Set email subject
       emailSubject.textContent = resolution.email_subject;
+
 
       // Set email body with automatic placeholder replacement
       const processedBody = processEmailBody(resolution.email_body);
       emailBody.innerHTML = processedBody;
 
+
       // Scroll to resolution section
       resolutionSection.scrollIntoView({ behavior: "smooth" });
     }
+
 
     /**
      * Render task checkboxes
@@ -320,14 +372,17 @@
     function renderTasks(tasks) {
       tasksContainer.innerHTML = "";
 
+
       if (!tasks || tasks.length === 0) {
         tasksContainer.innerHTML = "<p>No tasks for this template</p>";
         return;
       }
 
+
       tasks.forEach((task, index) => {
         const taskItem = document.createElement("div");
         taskItem.className = "task-item";
+
 
         const checkbox = document.createElement("input");
         checkbox.type = "checkbox";
@@ -335,16 +390,19 @@
         checkbox.className = "task-checkbox";
         checkbox.addEventListener("change", checkAllTasksCompleted);
 
+
         const label = document.createElement("label");
         label.htmlFor = `task-${index}`;
         label.className = "task-label";
         label.textContent = task;
+
 
         taskItem.appendChild(checkbox);
         taskItem.appendChild(label);
         tasksContainer.appendChild(taskItem);
       });
     }
+
 
     /**
      * Check if all tasks are completed and update UI accordingly
@@ -355,6 +413,7 @@
         (checkbox) => checkbox.checked
       );
 
+
       if (allChecked && checkboxes.length > 0) {
         tasksContainer.classList.add("all-checked");
       } else {
@@ -362,11 +421,13 @@
       }
     }
 
+
     /**
      * Process email body with automatic placeholder replacement and highlighting
      */
     function processEmailBody(body) {
       if (!body) return "";
+
 
       // Replace automatic placeholders
       let processedBody = body.replace(
@@ -374,11 +435,14 @@
         currentUser.firstName
       );
 
+
       // Highlight manual placeholders
       processedBody = highlightManualPlaceholders(processedBody);
 
+
       return processedBody;
     }
+
 
     /**
      * Highlight manual placeholders in the email body
@@ -386,12 +450,14 @@
     function highlightManualPlaceholders(text) {
       if (!text) return "";
 
+
       // Replace xXSomethingXx placeholders with highlighted versions
       return text.replace(
         /xX([^xX]+)Xx/g,
         '<strong style="background-color: #ffff99; color: #333;">xX$1Xx</strong>'
       );
     }
+
 
     /**
      * Handle copying content to clipboard
@@ -401,8 +467,10 @@
       const targetId = button.dataset.target;
       const contentElement = document.getElementById(targetId);
 
+
       // Extract text content, handling contenteditable HTML if needed
       let textToCopy = contentElement.textContent || "";
+
 
       // Use Clipboard API if available
       if (navigator.clipboard && navigator.clipboard.writeText) {
@@ -420,6 +488,7 @@
       }
     }
 
+
     /**
      * Fallback copy method using document.execCommand
      */
@@ -431,11 +500,14 @@
         document.body.appendChild(textarea);
         textarea.select();
 
+
         // Execute copy command
         const successful = document.execCommand("copy");
 
+
         // Remove temporary element
         document.body.removeChild(textarea);
+
 
         if (successful) {
           showCopiedFeedback(
@@ -450,6 +522,7 @@
       }
     }
 
+
     /**
      * Show visual feedback after copying
      */
@@ -458,8 +531,10 @@
       button.classList.add("copied");
       button.textContent = "Copied!";
 
+
       // Add flash animation to content
       contentElement.classList.add("copy-flash");
+
 
       // Reset after animation completes
       setTimeout(() => {
@@ -470,18 +545,22 @@
     }
   });
 
+
   // About modal logic
   const aboutButton = document.getElementById("about-button");
   const aboutModal = document.getElementById("about-modal");
   const closeAbout = document.getElementById("close-about");
 
+
   aboutButton.addEventListener("click", () => {
     aboutModal.classList.remove("hidden");
   });
 
+
   closeAbout.addEventListener("click", () => {
     aboutModal.classList.add("hidden");
   });
+
 
   window.addEventListener("click", (e) => {
     if (e.target == aboutModal) {

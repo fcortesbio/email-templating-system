@@ -1,0 +1,1901 @@
+﻿Code.gs
+/**
+ * Email Templating Web App for Support Agents
+ * Main controller script for the web application
+ */
+
+
+
+
+/**
+ * Serves the web application HTML
+ * @param {Object} e - Event object from Google Apps Script
+ * @return {HtmlOutput} The HTML page for the web app
+ */
+function doGet(e) {
+  return HtmlService.createTemplateFromFile('index')
+    .evaluate()
+    .setTitle('Email Templates')
+    .addMetaTag('viewport', 'width=device-width, initial-scale=1')
+    .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+}
+
+
+
+
+/**
+ * Includes HTML files in the main HTML file
+ * @param {string} filename - Name of the file to include
+ * @return {string} The content of the file
+ */
+function include(filename) {
+  return HtmlService.createHtmlOutputFromFile(filename).getContent();
+}
+
+
+
+
+/**
+ * Gets user information from the spreadsheet
+ * @param {string} query - Employee ID (number) or name (string)
+ * @return {Object} User object with firstName property, or null if not found
+ */
+function getUser(query) {
+  // Get the active spreadsheet and sheet
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = ss.getSheetByName('users');
+
+
+
+
+  if (!sheet) {
+    Logger.log('Users sheet not found');
+    return null;
+  }
+
+
+
+
+  const dataRange = sheet.getDataRange();
+  const values = dataRange.getValues();
+
+
+
+
+  // Determine if query is an EID (number) or name (string)
+  const isEid = /^\d+$/.test(query);
+
+
+
+
+  for (let i = 0; i < values.length; i++) {
+    const row = values[i];
+    const eid = row[0];
+    const fullName = row[1];
+
+
+
+
+    if (isEid && eid.toString() === query) {
+      // Extract first name from "Lastname, Firstname" format
+      const firstName = fullName.split(',')[1].trim();
+      return { firstName: firstName };
+    } else if (!isEid && fullName.toLowerCase().includes(query.toLowerCase())) {
+      // Extract first name from "Lastname, Firstname" format
+      const firstName = fullName.split(',')[1].trim();
+      return { firstName: firstName };
+    }
+  }
+
+
+
+
+  return null;
+}
+
+
+
+
+/**
+ * Gets the topics object for client-side rendering
+ * @return {Object} The topics object from templates.gs
+ */
+function getTopics() {
+  return topics;
+}
+
+
+
+
+
+
+Index.html
+
+
+<!DOCTYPE html>
+<html>
+  <head>
+    <base target="_top" />
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Email Templates</title>
+    <?!= include('styles'); ?>
+  </head>
+  <body>
+    <!-- Login Section -->
+    <div id="login-section" class="section">
+      <div class="login-container">
+        <h1>Email Templates</h1>
+        <p>Enter your Employee ID or Name to continue</p>
+        <div class="input-group">
+          <input
+            type="text"
+            id="user-input"
+            placeholder="Employee ID or Name"
+            aria-label="Employee ID or Name"
+          />
+          <button id="login-button" class="btn primary">Continue</button>
+        </div>
+        <p id="login-error" class="error-message"></p>
+      </div>
+    </div>
+
+
+
+
+    <!-- Main App Section (hidden initially) -->
+    <div id="app-section" class="section hidden">
+      <header>
+        <div class="header-content">
+          <h1>Email Templates</h1>
+          <div class="user-info">
+            <span id="user-name"></span>
+            <button id="about-button" class="btn small">?</button>
+            <button id="logout-button" class="btn small">Logout</button>
+          </div>
+        </div>
+      </header>
+
+
+
+
+      <main>
+        <div class="container">
+          <div class="sidebar">
+            <h2>Topics</h2>
+            <div id="topics-menu" class="topics-menu"></div>
+          </div>
+
+
+
+
+          <div class="content">
+            <div id="welcome-message" class="welcome-message">
+              <h2>Welcome to Email Templates</h2>
+              <p>Select a topic from the menu to view templates</p>
+            </div>
+
+
+
+
+            <div id="resolution-section" class="resolution hidden">
+              <h2 id="resolution-title">Template Title</h2>
+
+
+
+
+              <div class="resolution-content">
+                <div class="tasks-section">
+                  <h3>Tasks</h3>
+                  <div id="tasks-container" class="tasks-container"></div>
+                </div>
+
+
+
+
+                <div class="template-section">
+                  <div class="template-item">
+                    <div class="template-header">
+                      <h3>Backend Note</h3>
+                      <button class="copy-btn" data-target="backend-note">
+                        Copy
+                      </button>
+                    </div>
+                    <div id="backend-note" class="template-content"></div>
+                  </div>
+
+
+
+
+                  <div class="template-item">
+                    <div class="template-header">
+                      <h3>Email Subject</h3>
+                      <button class="copy-btn" data-target="email-subject">
+                        Copy
+                      </button>
+                    </div>
+                    <div id="email-subject" class="template-content"></div>
+                  </div>
+
+
+
+
+                  <div class="template-item">
+                    <div class="template-header">
+                      <h3>Email Body</h3>
+                      <button class="copy-btn" data-target="email-body">
+                        Copy
+                      </button>
+                    </div>
+                    <div
+                      id="email-body"
+                      class="template-content"
+                      contenteditable="true"
+                    ></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+
+
+
+
+    <!-- About Modal -->
+    <div id="about-modal" class="modal hidden">
+      <div class="modal-content">
+        <span id="close-about" class="close-btn">&times;</span>
+        <h2>About This App</h2>
+        <p>
+          <strong>Email Templating System</strong> is a secure, user-friendly
+          web app built with <strong>Google Apps Script</strong>, designed to
+          replace a bulky spreadsheet used by the
+          <strong>Customer Solutions Tech team</strong>.
+        </p>
+        <br />
+        <ul>
+          <li>🔍 Quick login with name or Employee ID (EID)</li>
+          <li>📂 Dynamic topic navigation</li>
+          <li>📋 Task checklists for guidance</li>
+          <li>📝 Editable templates with smart placeholders</li>
+          <li>📎 One-click copy functionality</li>
+          <li>🔐 Secure, no external data access</li>
+        </ul>
+        <br />
+        <p>Enjoy, and feel free to contact for any fix/suggestion!</p>
+        <p>❤️ With love, from Fabi.</p>
+      </div>
+    </div>
+
+
+
+
+    <?!= include('scripts'); ?>
+  </body>
+</html>
+
+
+
+
+
+
+Auth.gs
+/**
+ * Authentication related functions
+ */
+
+
+
+
+/**
+ * Validates and processes user input for authentication
+ * @param {string} input - The user input (EID or name)
+ * @return {Object} Result object with success flag and user data or error message
+ */
+function validateUser(input) {
+  if (!input || input.trim() === '') {
+    return {
+      success: false,
+      message: 'Please enter your Employee ID or Name'
+    };
+  }
+
+
+
+
+  // If input is only numbers, treat as EID
+  // If input contains letters, treat as name
+  let processedInput = input.trim();
+
+
+
+
+  if (/^\d+$/.test(processedInput)) {
+    // It's an EID (numbers only)
+    const user = getUser(processedInput);
+    if (user) {
+      return {
+        success: true,
+        user: user
+      };
+    } else {
+      return {
+        success: false,
+        message: 'Employee ID not found'
+      };
+    }
+  } else {
+    // It's a name (contains letters)
+    // Only keep the first word if multiple words
+    processedInput = processedInput.split(' ')[0];
+
+
+
+
+    const user = getUser(processedInput);
+    if (user) {
+      return {
+        success: true,
+        user: user
+      };
+    } else {
+      return {
+        success: false,
+        message: 'Name not found'
+      };
+    }
+  }
+}
+
+
+
+
+
+
+
+
+Scripts.gs
+
+
+<script>
+  /**
+   * Email Templating Web App - Client-side JavaScript
+   */
+
+
+
+
+  // Global state
+  let currentUser = null;
+  let topicsData = null;
+
+
+
+
+  // DOM Elements
+  document.addEventListener("DOMContentLoaded", function () {
+    // Login Elements
+    const loginSection = document.getElementById("login-section");
+    const appSection = document.getElementById("app-section");
+    const userInput = document.getElementById("user-input");
+    const loginButton = document.getElementById("login-button");
+    const loginError = document.getElementById("login-error");
+    const userName = document.getElementById("user-name");
+    const logoutButton = document.getElementById("logout-button");
+
+
+
+
+    // Main App Elements
+    const topicsMenu = document.getElementById("topics-menu");
+    const welcomeMessage = document.getElementById("welcome-message");
+    const resolutionSection = document.getElementById("resolution-section");
+    const resolutionTitle = document.getElementById("resolution-title");
+    const tasksContainer = document.getElementById("tasks-container");
+    const backendNote = document.getElementById("backend-note");
+    const emailSubject = document.getElementById("email-subject");
+    const emailBody = document.getElementById("email-body");
+
+
+
+
+    // Initialize the app
+    initApp();
+
+
+
+
+    /**
+     * Initialize the application
+     */
+    function initApp() {
+      // Check for stored user session
+      checkUserSession();
+
+
+
+
+      // Event listeners
+      loginButton.addEventListener("click", handleLogin);
+      userInput.addEventListener("keypress", function (e) {
+        if (e.key === "Enter") {
+          handleLogin();
+        }
+      });
+
+
+
+
+      logoutButton.addEventListener("click", handleLogout);
+
+
+
+
+      // Copy buttons
+      document.querySelectorAll(".copy-btn").forEach((btn) => {
+        btn.addEventListener("click", handleCopy);
+      });
+    }
+
+
+
+
+    /**
+     * Check for existing user session
+     */
+    function checkUserSession() {
+      try {
+        const storedUser = sessionStorage.getItem("emailTemplateUser");
+        if (storedUser) {
+          currentUser = JSON.parse(storedUser);
+          showMainApp();
+        }
+      } catch (e) {
+        console.error("Error checking user session:", e);
+        // Clear potentially corrupted session data
+        sessionStorage.removeItem("emailTemplateUser");
+      }
+    }
+
+
+
+
+    /**
+     * Handle user login
+     */
+    function handleLogin() {
+      const input = userInput.value.trim();
+      if (!input) {
+        showLoginError("Please enter your Employee ID or Name");
+        return;
+      }
+
+
+
+
+      loginButton.disabled = true;
+      loginButton.textContent = "Loading...";
+
+
+
+
+      // Call server-side function to validate user
+      google.script.run
+        .withSuccessHandler(function (result) {
+          loginButton.disabled = false;
+          loginButton.textContent = "Continue";
+
+
+
+
+          if (result.success) {
+            currentUser = result.user;
+            // Store user in session storage
+            sessionStorage.setItem(
+              "emailTemplateUser",
+              JSON.stringify(currentUser)
+            );
+            showMainApp();
+          } else {
+            showLoginError(result.message);
+          }
+        })
+        .withFailureHandler(function (error) {
+          loginButton.disabled = false;
+          loginButton.textContent = "Continue";
+          showLoginError("An error occurred. Please try again.");
+          console.error("Login error:", error);
+        })
+        .validateUser(input);
+    }
+
+
+
+
+    /**
+     * Show login error message
+     */
+    function showLoginError(message) {
+      loginError.textContent = message;
+      loginError.style.opacity = 1;
+    }
+
+
+
+
+    /**
+     * Handle user logout
+     */
+    function handleLogout() {
+      sessionStorage.removeItem("emailTemplateUser");
+      currentUser = null;
+      appSection.classList.add("hidden");
+      loginSection.classList.remove("hidden");
+      userInput.value = "";
+      loginError.textContent = "";
+    }
+
+
+
+
+    /**
+     * Show the main application UI
+     */
+    function showMainApp() {
+      // Update UI
+      loginSection.classList.add("hidden");
+      appSection.classList.remove("hidden");
+      userName.textContent = `Hello, ${currentUser.firstName}`;
+
+
+
+
+      // Load topics data
+      google.script.run
+        .withSuccessHandler(function (topics) {
+          topicsData = topics;
+          renderTopicsMenu(topics);
+        })
+        .withFailureHandler(function (error) {
+          console.error("Error loading topics:", error);
+          alert("Error loading templates. Please try refreshing the page.");
+        })
+        .getTopics();
+    }
+
+
+
+
+    /**
+     * Render the topics menu recursively
+     */
+    function renderTopicsMenu(topics, parentElement = topicsMenu) {
+      // Clear existing content if this is the root call
+      if (parentElement === topicsMenu) {
+        parentElement.innerHTML = "";
+      }
+
+
+
+
+      // Process each topic
+      Object.keys(topics).forEach((topic) => {
+        const topicData = topics[topic];
+        const isLeaf = topicData.hasOwnProperty("resolution");
+
+
+
+
+        // Create topic item container
+        const topicItem = document.createElement("div");
+        topicItem.className = "topic-item";
+
+
+
+
+        // Create topic header
+        const topicHeader = document.createElement("div");
+        topicHeader.className = "topic-header";
+
+
+
+
+        // Create toggle for non-leaf nodes
+        const topicToggle = document.createElement("span");
+        topicToggle.className = "topic-toggle";
+        topicToggle.textContent = isLeaf ? "•" : "▶";
+        topicHeader.appendChild(topicToggle);
+
+
+
+
+        // Create topic label
+        const topicLabel = document.createElement("span");
+        topicLabel.textContent = topic;
+        topicHeader.appendChild(topicLabel);
+
+
+
+
+        // Store the path to this topic
+        topicHeader.dataset.path = topic;
+
+
+
+
+        // Add header to item
+        topicItem.appendChild(topicHeader);
+
+
+
+
+        // Handle children for non-leaf nodes
+        if (!isLeaf) {
+          // Create children container
+          const childrenContainer = document.createElement("div");
+          childrenContainer.className = "topic-children";
+
+
+
+
+          // Recursively render children
+          renderTopicsMenu(topicData, childrenContainer);
+
+
+
+
+          // Add children container to item
+          topicItem.appendChild(childrenContainer);
+
+
+
+
+          // Toggle children on click
+          topicHeader.addEventListener("click", function () {
+            const isExpanded = childrenContainer.classList.contains("expanded");
+            childrenContainer.classList.toggle("expanded", !isExpanded);
+            topicToggle.textContent = isExpanded ? "▶" : "▼";
+            topicToggle.style.transform = isExpanded
+              ? "rotate(0)"
+              : "rotate(90deg)";
+          });
+        } else {
+          // For leaf nodes, show the resolution when clicked
+          topicHeader.addEventListener("click", function () {
+            // Remove active class from all headers
+            document
+              .querySelectorAll(".topic-header.active")
+              .forEach((header) => {
+                header.classList.remove("active");
+              });
+
+
+
+
+            // Add active class to this header
+            topicHeader.classList.add("active");
+
+
+
+
+            // Show resolution
+            showResolution(topic, topicData.resolution);
+          });
+        }
+
+
+
+
+        // Add the topic item to the parent element
+        parentElement.appendChild(topicItem);
+      });
+    }
+
+
+
+
+    /**
+     * Show the selected resolution
+     */
+    function showResolution(title, resolution) {
+      // Hide welcome message
+      welcomeMessage.classList.add("hidden");
+
+
+
+
+      // Show resolution section
+      resolutionSection.classList.remove("hidden");
+
+
+
+
+      // Set the title
+      resolutionTitle.textContent = title;
+
+
+
+
+      // Render tasks
+      renderTasks(resolution.tasks);
+
+
+
+
+      // Set backend note
+      backendNote.textContent = resolution.backend_note;
+
+
+
+
+      // Set email subject
+      emailSubject.textContent = resolution.email_subject;
+
+
+
+
+      // Set email body with automatic placeholder replacement
+      const processedBody = processEmailBody(resolution.email_body);
+      emailBody.innerHTML = processedBody;
+
+
+
+
+      // Scroll to resolution section
+      resolutionSection.scrollIntoView({ behavior: "smooth" });
+    }
+
+
+
+
+    /**
+     * Render task checkboxes
+     */
+    function renderTasks(tasks) {
+      tasksContainer.innerHTML = "";
+
+
+
+
+      if (!tasks || tasks.length === 0) {
+        tasksContainer.innerHTML = "<p>No tasks for this template</p>";
+        return;
+      }
+
+
+
+
+      tasks.forEach((task, index) => {
+        const taskItem = document.createElement("div");
+        taskItem.className = "task-item";
+
+
+
+
+        const checkbox = document.createElement("input");
+        checkbox.type = "checkbox";
+        checkbox.id = `task-${index}`;
+        checkbox.className = "task-checkbox";
+        checkbox.addEventListener("change", checkAllTasksCompleted);
+
+
+
+
+        const label = document.createElement("label");
+        label.htmlFor = `task-${index}`;
+        label.className = "task-label";
+        label.textContent = task;
+
+
+
+
+        taskItem.appendChild(checkbox);
+        taskItem.appendChild(label);
+        tasksContainer.appendChild(taskItem);
+      });
+    }
+
+
+
+
+    /**
+     * Check if all tasks are completed and update UI accordingly
+     */
+    function checkAllTasksCompleted() {
+      const checkboxes = tasksContainer.querySelectorAll(".task-checkbox");
+      const allChecked = Array.from(checkboxes).every(
+        (checkbox) => checkbox.checked
+      );
+
+
+
+
+      if (allChecked && checkboxes.length > 0) {
+        tasksContainer.classList.add("all-checked");
+      } else {
+        tasksContainer.classList.remove("all-checked");
+      }
+    }
+
+
+
+
+    /**
+     * Process email body with automatic placeholder replacement and highlighting
+     */
+    function processEmailBody(body) {
+      if (!body) return "";
+
+
+
+
+      // Replace automatic placeholders
+      let processedBody = body.replace(
+        /{{agent_name}}/g,
+        currentUser.firstName
+      );
+
+
+
+
+      // Highlight manual placeholders
+      processedBody = highlightManualPlaceholders(processedBody);
+
+
+
+
+      return processedBody;
+    }
+
+
+
+
+    /**
+     * Highlight manual placeholders in the email body
+     */
+    function highlightManualPlaceholders(text) {
+      if (!text) return "";
+
+
+
+
+      // Replace xXSomethingXx placeholders with highlighted versions
+      return text.replace(
+        /xX([^xX]+)Xx/g,
+        '<strong style="background-color: #ffff99; color: #333;">xX$1Xx</strong>'
+      );
+    }
+
+
+
+
+    /**
+     * Handle copying content to clipboard
+     */
+    function handleCopy(event) {
+      const button = event.currentTarget;
+      const targetId = button.dataset.target;
+      const contentElement = document.getElementById(targetId);
+
+
+
+
+      // Extract text content, handling contenteditable HTML if needed
+      let textToCopy = contentElement.textContent || "";
+
+
+
+
+      // Use Clipboard API if available
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard
+          .writeText(textToCopy)
+          .then(() => showCopiedFeedback(button, contentElement))
+          .catch((error) => {
+            console.error("Error copying text:", error);
+            // Fall back to document.execCommand
+            fallbackCopy(contentElement);
+          });
+      } else {
+        // Fall back to document.execCommand for older browsers
+        fallbackCopy(contentElement);
+      }
+    }
+
+
+
+
+    /**
+     * Fallback copy method using document.execCommand
+     */
+    function fallbackCopy(element) {
+      try {
+        // Create temporary textarea for text content
+        const textarea = document.createElement("textarea");
+        textarea.value = element.textContent;
+        document.body.appendChild(textarea);
+        textarea.select();
+
+
+
+
+        // Execute copy command
+        const successful = document.execCommand("copy");
+
+
+
+
+        // Remove temporary element
+        document.body.removeChild(textarea);
+
+
+
+
+        if (successful) {
+          showCopiedFeedback(
+            document.querySelector(`.copy-btn[data-target="${element.id}"]`),
+            element
+          );
+        } else {
+          console.error("Fallback copy failed");
+        }
+      } catch (err) {
+        console.error("Fallback copy error:", err);
+      }
+    }
+
+
+
+
+    /**
+     * Show visual feedback after copying
+     */
+    function showCopiedFeedback(button, contentElement) {
+      // Add 'copied' class to button
+      button.classList.add("copied");
+      button.textContent = "Copied!";
+
+
+
+
+      // Add flash animation to content
+      contentElement.classList.add("copy-flash");
+
+
+
+
+      // Reset after animation completes
+      setTimeout(() => {
+        button.classList.remove("copied");
+        button.textContent = "Copy";
+        contentElement.classList.remove("copy-flash");
+      }, 2000);
+    }
+  });
+
+
+
+
+  // About modal logic
+  const aboutButton = document.getElementById("about-button");
+  const aboutModal = document.getElementById("about-modal");
+  const closeAbout = document.getElementById("close-about");
+
+
+
+
+  aboutButton.addEventListener("click", () => {
+    aboutModal.classList.remove("hidden");
+  });
+
+
+
+
+  closeAbout.addEventListener("click", () => {
+    aboutModal.classList.add("hidden");
+  });
+
+
+
+
+  window.addEventListener("click", (e) => {
+    if (e.target == aboutModal) {
+      aboutModal.classList.add("hidden");
+    }
+  });
+</script>
+
+
+
+
+
+
+
+
+Templates.gs
+/**
+ * Email Template Data Structure
+ * Hierarchical object containing all email templates and categories
+ * --THIS IS NO LONGER USED, but replaced with dynamic data retrival from source Spreadsheet in utils.gs--
+ */
+
+
+
+
+const topics_deprecated = {
+  "Account Issues": {
+    "Login Problems": {
+      "Forgot Password": {
+        resolution: {
+          tasks: [
+            "Verify user identity",
+            "Check account status",
+            "Send password reset link"
+          ],
+          backend_note: "Check if user has active lockout in backend. If locked, must be manually unlocked before reset.",
+          email_subject: "Password Reset Information",
+          email_body: "Hello,\n\nThank you for contacting support. I understand you're having trouble accessing your account.\n\nI've sent a password reset link to your registered email address. The link will expire in 24 hours.\n\nIf you don't receive the email, please check your spam folder before contacting us again.\n\nBest regards,\n{{agent_name}}"
+        }
+      },
+      "Account Locked": {
+        resolution: {
+          tasks: [
+            "Verify user identity with security questions",
+            "Check lockout reason in admin panel",
+            "Reset lockout if appropriate"
+          ],
+          backend_note: "Use admin tool > security > lockouts to check reason code. Only reset if reason code is 1-3.",
+          email_subject: "Account Access Restored",
+          email_body: "Hello,\n\nThank you for contacting us about your locked account.\n\nI've verified your identity and unlocked your account. You should now be able to log in successfully.\n\nFor security purposes, please update your password upon logging in.\n\nIf you continue to experience issues, please don't hesitate to contact us.\n\nBest regards,\n{{agent_name}}"
+        }
+      }
+    },
+    "Billing Issues": {
+      "Update Payment Method": {
+        resolution: {
+          tasks: [
+            "Verify user identity",
+            "Confirm billing information",
+            "Guide through payment update process"
+          ],
+          backend_note: "Do not access or view full payment details. Only confirm last 4 digits for verification.",
+          email_subject: "Payment Method Update Instructions",
+          email_body: "Hello,\n\nThank you for contacting us about updating your payment method.\n\nTo update your payment information, please follow these steps:\n\n1. Log in to your account\n2. Go to Settings > Billing\n3. Select 'Payment Methods'\n4. Click 'Add New Method' or 'Edit' on an existing method\n\nIf you encounter any issues during this process, please take a screenshot (without sensitive information) and reply to this email.\n\nBest regards,\n{{agent_name}}"
+        }
+      },
+      "Disputed Charge": {
+        resolution: {
+          tasks: [
+            "Verify user identity",
+            "Locate transaction in billing system",
+            "Confirm transaction details",
+            "Explain or escalate as needed"
+          ],
+          backend_note: "Check transaction log in Billing > Transactions > Search by ID. Look for error codes or notes.",
+          email_subject: "Regarding Your Billing Inquiry",
+          email_body: "Hello,\n\nThank you for bringing this billing concern to our attention.\n\nI've investigated the charge of xXAMOUNTXx from xXDATEXx and found that this was for xXREASONXx.\n\nIf you believe this charge is incorrect, please provide any additional information that might help us further investigate this matter.\n\nWe appreciate your patience while we work to resolve this issue.\n\nBest regards,\n{{agent_name}}"
+        }
+      }
+    }
+  },
+  "Technical Support": {
+    "Installation Issues": {
+      "Error Messages": {
+        resolution: {
+          tasks: [
+            "Ask for exact error message",
+            "Check error database for known solutions",
+            "Verify software version",
+            "Provide specific fix or escalate"
+          ],
+          backend_note: "Common errors: ERR-102 (permission), ERR-305 (network), ERR-418 (compatibility). Check KB for solutions.",
+          email_subject: "Solution for Your Installation Error",
+          email_body: "Hello,\n\nThank you for contacting technical support about the error message you encountered during installation.\n\nBased on the information you provided, the error xXERROR_CODEXx typically occurs because xXREASONXx.\n\nTo resolve this issue, please try the following steps:\n\n1. xXSTEP_1Xx\n2. xXSTEP_2Xx\n3. xXSTEP_3Xx\n\nIf these steps don't resolve the issue, please reply with any new error messages that appear.\n\nBest regards,\n{{agent_name}}"
+        }
+      },
+      "Compatibility Issues": {
+        resolution: {
+          tasks: [
+            "Verify system specifications",
+            "Check compatibility requirements",
+            "Offer alternatives if needed"
+          ],
+          backend_note: "Minimum requirements: Windows 10/macOS 10.14, 4GB RAM, 2GHz processor. Check for known issues with specific hardware.",
+          email_subject: "Compatibility Information for Your System",
+          email_body: "Hello,\n\nThank you for contacting us about compatibility concerns.\n\nAfter reviewing your system specifications, I can confirm that xXCOMPATIBILITY_STATUSXx.\n\nMinimum system requirements:\n- Operating System: Windows 10/macOS 10.14 or newer\n- RAM: 4GB minimum (8GB recommended)\n- Processor: 2GHz dual-core or better\n- Storage: 500MB available space\n\nxXADDITIONAL_INFOXx\n\nPlease let me know if you have any other questions.\n\nBest regards,\n{{agent_name}}"
+        }
+      }
+    },
+    "Performance Issues": {
+      "Slow Operation": {
+        resolution: {
+          tasks: [
+            "Gather specific performance metrics",
+            "Check for known performance issues",
+            "Verify system meets recommended specs",
+            "Provide optimization steps"
+          ],
+          backend_note: "Check recent performance tickets. Known issues with v2.3 on older systems. Suggest cache clearing first.",
+          email_subject: "Improving Application Performance",
+          email_body: "Hello,\n\nThank you for reporting the performance issues you're experiencing.\n\nBased on your description, here are some steps that should help improve performance:\n\n1. Clear application cache: Settings > Advanced > Clear Cache\n2. Update to the latest version (currently xXVERSIONXx)\n3. Close other resource-intensive applications while using our software\n4. xXADDITIONAL_STEPXx\n\nMany users find that the first step alone significantly improves performance.\n\nPlease let me know if these steps help or if you need further assistance.\n\nBest regards,\n{{agent_name}}"
+        }
+      }
+    }
+  },
+  "Feature Requests": {
+    "New Feature": {
+      resolution: {
+        tasks: [
+          "Document request details",
+          "Check if already on roadmap",
+          "Submit to product team",
+          "Set expectations with customer"
+        ],
+        backend_note: "Submit all feature requests via the Feature Request Tool. Search first to avoid duplicates.",
+        email_subject: "Regarding Your Feature Request",
+        email_body: "Hello,\n\nThank you for your suggestion about adding xXFEATUREXx to our product.\n\nWe appreciate customers like you who take the time to share ideas for improving our services. I've documented your request and forwarded it to our product team for consideration.\n\nWhile I can't promise when or if this specific feature will be implemented, customer feedback is a crucial part of our development process.\n\nWe'll be announcing new features in our monthly newsletter, so please keep an eye out for updates.\n\nThank you again for your valuable input.\n\nBest regards,\n{{agent_name}}"
+      }
+    },
+    "Feature Enhancement": {
+      resolution: {
+        tasks: [
+          "Document current behavior",
+          "Document requested enhancement",
+          "Check if already on roadmap",
+          "Submit to product team"
+        ],
+        backend_note: "Use Enhancement Request form in agent portal. Include current behavior and desired behavior clearly.",
+        email_subject: "Regarding Your Enhancement Suggestion",
+        email_body: "Hello,\n\nThank you for suggesting an enhancement to our xXFEATURE_NAMEXx feature.\n\nI understand you'd like to see xXENHANCEMENT_DETAILSXx, which would improve your workflow.\n\nI've documented this suggestion and submitted it to our product team. They regularly review customer feedback when planning future updates.\n\nThough I can't provide a specific timeline for implementation, I want you to know your feedback is valuable and appreciated.\n\nThank you for helping us improve our product.\n\nBest regards,\n{{agent_name}}"
+      }
+    }
+  }
+};
+
+
+
+
+
+
+
+
+utils.gs
+
+
+// utils.gs
+
+
+
+
+/**
+* Utility functions for the Email Templating app
+*/
+
+
+
+
+/**
+* Processes a template string by replacing placeholders
+* @param {string} template - The template string with placeholders
+* @param {Object} replacements - Object with placeholder keys and replacement values
+* @return {string} The processed template with replacements
+*/
+function processTemplate(template, replacements) {
+   if (!template) return '';
+  
+   let processed = template;
+  
+   // Replace each placeholder with its value
+   Object.keys(replacements).forEach(key => {
+     const placeholder = `{{${key}}}`;
+     processed = processed.replace(new RegExp(placeholder, 'g'), replacements[key] || '');
+   });
+  
+   return processed;
+ }
+  /**
+  * Highlights manual placeholders in a template
+  * @param {string} template - The template string with manual placeholders
+  * @return {string} HTML string with highlighted placeholders
+  */
+ function highlightManualPlaceholders(template) {
+   if (!template) return '';
+  
+   // Regex to find manual placeholders (format: xXSomethingXx)
+   const manualPlaceholderRegex = /xX([^xX]+)Xx/g;
+  
+   // Replace placeholders with bold highlighted versions
+   return template.replace(manualPlaceholderRegex, '<strong style="background-color: #ffff99; color: #333;">xX$1Xx</strong>');
+ }
+____ new-feature: 
+
+
+// === utils.gs ===
+
+
+
+
+/**
+ * Reads the 'email_templates' spreadsheet and converts it into the nested topics object
+ * Expected columns:
+ * [Level 1 Topic, Level 2 Subtopic, Level 3 Case, Tasks, Backend Note, Email Subject, Email Body]
+ * Tasks should be separated with semicolons (;) in the spreadsheet
+ * @returns {Object} The structured topics object
+ */
+function loadTemplatesFromSheet() {
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('email_templates');
+  if (!sheet) throw new Error('Sheet "email_templates" not found');
+
+
+
+
+  const rows = sheet.getDataRange().getValues();
+  const topics = {};
+
+
+
+
+  for (let i = 1; i < rows.length; i++) { // skip header
+    const [level1, level2, level3, tasksRaw, backendNote, subject, body] = rows[i];
+
+
+
+
+    if (!level1) continue; // skip invalid rows
+
+
+
+
+    const taskList = tasksRaw ? tasksRaw.split(';').map(t => t.trim()).filter(t => t.length > 0) : [];
+    const resolution = {
+      tasks: taskList,
+      backend_note: backendNote || '',
+      email_subject: subject || '',
+      email_body: body || ''
+    };
+
+
+
+
+    if (!topics[level1]) topics[level1] = {};
+    const level1Node = topics[level1];
+
+
+
+
+    if (!level2) {
+      // Level 1 is terminal
+      level1Node.resolution = resolution;
+    } else {
+      if (!level1Node[level2]) level1Node[level2] = {};
+      const level2Node = level1Node[level2];
+
+
+
+
+      if (!level3) {
+        // Level 2 is terminal
+        level2Node.resolution = resolution;
+      } else {
+        // Level 3 is terminal
+        level2Node[level3] = { resolution };
+      }
+    }
+  }
+
+
+
+
+  return topics;
+}
+
+
+
+
+
+
+
+
+/**
+ * Replaces the static 'topics' object with dynamic data loaded from the spreadsheet
+ */
+function getTopics() {
+  return loadTemplatesFromSheet();
+}
+
+
+
+
+styles.html 
+
+
+
+
+<style>
+  /* Base Styles */
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+
+
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
+      Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+    font-size: 16px;
+    line-height: 1.5;
+    color: #333;
+    background-color: #f5f7fa;
+  }
+
+
+
+
+  /* Layout */
+  .section {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+
+
+
+  .hidden {
+    display: none !important;
+  }
+
+
+
+
+  header {
+    background-color: #1a73e8;
+    color: white;
+    padding: 1rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+
+
+
+
+  .header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    max-width: 1200px;
+    margin: 0 auto;
+    width: 100%;
+  }
+
+
+
+
+  .container {
+    display: flex;
+    max-width: 1200px;
+    margin: 1rem auto;
+    min-height: calc(100vh - 120px);
+    gap: 1.5rem;
+  }
+
+
+
+
+  /* Login Section */
+  .login-container {
+    max-width: 400px;
+    margin: auto;
+    background: white;
+    padding: 2rem;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    text-align: center;
+  }
+
+
+
+
+  .login-container h1 {
+    color: #1a73e8;
+    margin-bottom: 1rem;
+  }
+
+
+
+
+  .input-group {
+    display: flex;
+    margin: 1.5rem 0;
+  }
+
+
+
+
+  .input-group input {
+    flex: 1;
+    padding: 0.75rem;
+    border: 1px solid #ddd;
+    border-radius: 4px 0 0 4px;
+    font-size: 1rem;
+  }
+
+
+
+
+  .error-message {
+    color: #d93025;
+    font-size: 0.9rem;
+    margin-top: 0.5rem;
+    min-height: 1.2rem;
+  }
+
+
+
+
+  /* Buttons */
+  .btn {
+    background-color: #1a73e8;
+    color: white;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    font-size: 1rem;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+  }
+
+
+
+
+  .btn.primary {
+    border-radius: 0 4px 4px 0;
+  }
+
+
+
+
+  .btn.small {
+    padding: 0.4rem 0.8rem;
+    font-size: 0.85rem;
+  }
+
+
+
+
+  .btn:hover {
+    background-color: #0d62d9;
+  }
+
+
+
+
+  .copy-btn {
+    background-color: transparent;
+    color: #1a73e8;
+    border: 1px solid #1a73e8;
+    padding: 0.3rem 0.75rem;
+    font-size: 0.85rem;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+
+
+
+  .copy-btn:hover {
+    background-color: #1a73e8;
+    color: white;
+  }
+
+
+
+
+  .copy-btn.copied {
+    background-color: #34a853;
+    border-color: #34a853;
+    color: white;
+  }
+
+
+
+
+  /* Sidebar */
+  .sidebar {
+    width: 300px;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    padding: 1.25rem;
+    align-self: flex-start;
+    position: sticky;
+    top: 1rem;
+  }
+
+
+
+
+  .sidebar h2 {
+    color: #1a73e8;
+    margin-bottom: 1rem;
+    font-size: 1.25rem;
+  }
+
+
+
+
+  /* Content */
+  .content {
+    flex: 1;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    padding: 1.5rem;
+  }
+
+
+
+
+  .resolution-content {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+
+
+
+
+  /* Welcome Message */
+  .welcome-message {
+    text-align: center;
+    padding: 2rem;
+  }
+
+
+
+
+  .welcome-message h2 {
+    color: #1a73e8;
+    margin-bottom: 1rem;
+  }
+
+
+
+
+  /* Topics Menu */
+  .topics-menu {
+    margin-top: 0.5rem;
+  }
+
+
+
+
+  .topic-item {
+    margin-bottom: 0.5rem;
+  }
+
+
+
+
+  .topic-header {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    padding: 0.5rem 0;
+    color: #444;
+    font-weight: 500;
+    border-radius: 4px;
+    transition: background-color 0.2s;
+  }
+
+
+
+
+  .topic-header:hover {
+    background-color: #f0f4f8;
+  }
+
+
+
+
+  .topic-header.active {
+    background-color: #e4efff;
+    color: #1a73e8;
+  }
+
+
+
+
+  .topic-toggle {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    text-align: center;
+    margin-right: 8px;
+    transition: transform 0.2s;
+  }
+
+
+
+
+  .topic-children {
+    margin-left: 1.5rem;
+    display: none;
+  }
+
+
+
+
+  .topic-children.expanded {
+    display: block;
+    animation: slideDown 0.3s ease;
+  }
+
+
+
+
+  /* Resolution Section */
+  .resolution h2 {
+    color: #1a73e8;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid #eee;
+  }
+
+
+
+
+  .template-item {
+    margin-bottom: 1.5rem;
+  }
+
+
+
+
+  .template-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+  }
+
+
+
+
+  .template-header h3 {
+    font-size: 1rem;
+    color: #555;
+    font-weight: 600;
+  }
+
+
+
+
+  .template-content {
+    background-color: #f8f9fa;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 0.75rem;
+    min-height: 60px;
+    max-height: 300px;
+    overflow-y: auto;
+    white-space: pre-wrap;
+    font-family: "Courier New", monospace;
+    font-size: 0.95rem;
+    line-height: 1.5;
+  }
+
+
+
+
+  #email-body {
+    min-height: 200px;
+  }
+
+
+
+
+  /* Task Checkboxes */
+  .tasks-container {
+    margin-bottom: 1rem;
+  }
+
+
+
+
+  .task-item {
+    display: flex;
+    align-items: flex-start;
+    margin-bottom: 0.75rem;
+  }
+
+
+
+
+  .task-checkbox {
+    margin-right: 0.5rem;
+    margin-top: 0.25rem;
+    cursor: pointer;
+  }
+
+
+
+
+  .task-label {
+    flex: 1;
+    transition: color 0.2s;
+  }
+
+
+
+
+  .task-checkbox:checked + .task-label {
+    text-decoration: line-through;
+    color: #888;
+  }
+
+
+
+
+  .tasks-container.all-checked {
+    background-color: #e6f4ea;
+    border-radius: 4px;
+    padding: 0.5rem;
+    animation: pulse 1s;
+  }
+
+
+
+
+  /* User Info */
+  .user-info {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+
+
+
+
+  #user-name {
+    font-weight: 500;
+  }
+
+
+
+
+  /* Animations */
+  @keyframes slideDown {
+    from {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+
+
+
+  @keyframes pulse {
+    0% {
+      background-color: #e6f4ea;
+    }
+    50% {
+      background-color: #ceead6;
+    }
+    100% {
+      background-color: #e6f4ea;
+    }
+  }
+
+
+
+
+  @keyframes flash {
+    0% {
+      background-color: #e4efff;
+    }
+    100% {
+      background-color: transparent;
+    }
+  }
+
+
+
+
+  .copy-flash {
+    animation: flash 1s;
+  }
+
+
+
+
+  /* Responsive Design */
+  @media (max-width: 768px) {
+    .container {
+      flex-direction: column;
+    }
+
+
+
+
+    .sidebar {
+      width: 100%;
+      position: static;
+    }
+
+
+
+
+    .header-content {
+      flex-direction: column;
+      gap: 0.5rem;
+      text-align: center;
+    }
+
+
+
+
+    .header-content h1 {
+      font-size: 1.5rem;
+    }
+  }
+
+
+
+
+  /* Modal Styles */
+  .modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+  }
+
+
+
+
+  .modal-content {
+    background: white;
+    padding: 2rem;
+    border-radius: 8px;
+    width: 90%;
+    max-width: 500px;
+    text-align: left;
+    position: relative;
+  }
+
+
+
+
+  .close-btn {
+    position: absolute;
+    right: 1rem;
+    top: 1rem;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: #666;
+  }
+
+
+
+
+  .hidden {
+    display: none;
+  }
+</style>
